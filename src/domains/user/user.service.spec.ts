@@ -40,6 +40,11 @@ describe('UserService', () => {
 
       expect(result).toMatchObject({ videoCount: 5, followerCount: 0 });
       expect(result?.videos).toHaveLength(1);
+      expect(result?.videos[0]).toEqual({
+        id: 10, muxPlaybackId: 'abc', thumbnailUrl: null,
+        place: 'Market', city: 'BKK', country: 'Thailand',
+        category: 'food-markets', viewCount: 100,
+      });
     });
 
     it('returns null when user not found', async () => {
