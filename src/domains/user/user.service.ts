@@ -54,17 +54,34 @@ export class UserService {
     });
   }
 
-  getPublicProfile(userId: number) {
-    return this.prisma.user.findUnique({
+  async getPublicProfile(userId: number) {
+    const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: {
-        id: true,
-        username: true,
-        displayName: true,
-        avatarUrl: true,
-        status: true,
-      },
+      select: { id: true, username: true, displayName: true, avatarUrl: true, status: true },
     });
+
+    if (!user) return null;
+
+    const [videoCount, videos] = await Promise.all([
+      this.prisma.videoAsset.count({ where: { ownerId: userId, status: 'READY' } }),
+      this.prisma.videoAsset.findMany({
+        where: { ownerId: userId, status: 'READY' },
+        orderBy: { createdAt: 'desc' },
+        take: 30,
+        select: {
+          id: true,
+          muxPlaybackId: true,
+          thumbnailUrl: true,
+          place: true,
+          city: true,
+          country: true,
+          category: true,
+          viewCount: true,
+        },
+      }),
+    ]);
+
+    return { ...user, videoCount, followerCount: 0, videos };
   }
 
   listUserCapabilities(userId: number) {
