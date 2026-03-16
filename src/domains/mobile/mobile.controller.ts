@@ -1,18 +1,8 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Query,
-  Req,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { MobileService } from './mobile.service';
 import { JwtAuthGuard } from '@/auth/guards/jwt-auth.guard';
-import {
-  CapabilitiesGuard,
-  RequireCapabilities,
-} from '@/auth/guards/capabilities.guard';
-import { CursorPaginationDto } from '@/common/dto/cursor-pagination.dto';
+import { CapabilitiesGuard, RequireCapabilities } from '@/auth/guards/capabilities.guard';
+import { FeedQueryDto } from './dto/feed-query.dto';
 
 @Controller('mobile')
 export class MobileController {
@@ -26,7 +16,12 @@ export class MobileController {
   }
 
   @Get('feed')
-  getFeed(@Query() pagination: CursorPaginationDto) {
-    return this.mobileService.getFeed(pagination);
+  getFeed(@Query() query: FeedQueryDto) {
+    return this.mobileService.getFeed(query);
+  }
+
+  @Get('search')
+  search(@Query('q') q: string = '') {
+    return this.mobileService.search(q);
   }
 }
