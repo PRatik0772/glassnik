@@ -6,6 +6,7 @@ import {
   Text,
   TouchableOpacity,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { router } from 'expo-router';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
@@ -71,8 +72,7 @@ export default function ViewerScreen() {
     );
   }
 
-  return (
-    <GestureDetector gesture={swipeDown}>
+  const content = (
       <View className="flex-1 bg-black">
         <FlatList
           ref={flatListRef}
@@ -99,6 +99,8 @@ export default function ViewerScreen() {
           <Text className="text-white text-xs font-medium">Explore ↓</Text>
         </TouchableOpacity>
       </View>
-    </GestureDetector>
   );
+
+  if (Platform.OS === 'web') return content;
+  return <GestureDetector gesture={swipeDown}>{content}</GestureDetector>;
 }
