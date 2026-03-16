@@ -65,3 +65,6 @@ glassnik-7d5600b7230e*.json
 
 # Claude
 .claude/
+
+app/.env
+.superpowers/

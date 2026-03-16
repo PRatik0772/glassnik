@@ -4,15 +4,22 @@
     "slug": "glassnik",
     "version": "1.0.0",
     "scheme": "glassnik",
-    "web": { "bundler": "metro" },
-    "plugins": ["expo-router"],
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-video"
+    ],
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#000000"
       }
     },
-    "ios": { "supportsTablet": false },
+    "ios": {
+      "supportsTablet": false
+    },
     "newArchEnabled": true
   }
 }
