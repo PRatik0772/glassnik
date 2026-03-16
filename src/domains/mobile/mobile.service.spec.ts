@@ -53,12 +53,21 @@ describe('MobileService', () => {
   });
 
   describe('search', () => {
-    it('queries across place, city, country, username, and displayName', async () => {
+    it('queries across place, city, country, category, username, and displayName', async () => {
       mockPrisma.videoAsset.findMany.mockResolvedValue([]);
       await service.search('bangkok');
       expect(mockPrisma.videoAsset.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({ OR: expect.any(Array) }),
+          where: expect.objectContaining({
+            OR: expect.arrayContaining([
+              { place: { contains: 'bangkok', mode: 'insensitive' } },
+              { city: { contains: 'bangkok', mode: 'insensitive' } },
+              { country: { contains: 'bangkok', mode: 'insensitive' } },
+              { category: { contains: 'bangkok', mode: 'insensitive' } },
+              { owner: { is: { username: { contains: 'bangkok', mode: 'insensitive' } } } },
+              { owner: { is: { displayName: { contains: 'bangkok', mode: 'insensitive' } } } },
+            ]),
+          }),
         }),
       );
     });

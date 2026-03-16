@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import { FeedQueryDto } from './dto/feed-query.dto';
-import { PaginatedResponse } from '@/common/dto/cursor-pagination.dto';
 
 @Injectable()
 export class MobileService {
@@ -31,7 +30,15 @@ export class MobileService {
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
       where,
       orderBy,
-      include: {
+      select: {
+        id: true,
+        muxPlaybackId: true,
+        thumbnailUrl: true,
+        place: true,
+        city: true,
+        country: true,
+        category: true,
+        viewCount: true,
         owner: {
           select: { id: true, username: true, displayName: true, avatarUrl: true },
         },
@@ -42,7 +49,7 @@ export class MobileService {
     const data = hasMore ? videos.slice(0, limit) : videos;
     const nextCursor = hasMore ? String(data[data.length - 1].id) : null;
 
-    return new PaginatedResponse(data, nextCursor, hasMore);
+    return { data, nextCursor };
   }
 
   async search(q: string) {
@@ -58,12 +65,20 @@ export class MobileService {
           { city: { contains: term, mode: 'insensitive' } },
           { country: { contains: term, mode: 'insensitive' } },
           { category: { contains: term, mode: 'insensitive' } },
-          { owner: { username: { contains: term, mode: 'insensitive' } } },
-          { owner: { displayName: { contains: term, mode: 'insensitive' } } },
+          { owner: { is: { username: { contains: term, mode: 'insensitive' } } } },
+          { owner: { is: { displayName: { contains: term, mode: 'insensitive' } } } },
         ],
       },
       orderBy: { viewCount: 'desc' },
-      include: {
+      select: {
+        id: true,
+        muxPlaybackId: true,
+        thumbnailUrl: true,
+        place: true,
+        city: true,
+        country: true,
+        category: true,
+        viewCount: true,
         owner: {
           select: { id: true, username: true, displayName: true, avatarUrl: true },
         },
