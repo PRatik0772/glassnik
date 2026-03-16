@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import { FeedQueryDto } from './dto/feed-query.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class MobileService {
@@ -16,9 +17,12 @@ export class MobileService {
 
   async getFeed(query: FeedQueryDto) {
     const limit = query.limit ?? 20;
-    const cursor = query.cursor ? parseInt(query.cursor) : undefined;
+    const cursor = query.cursor ? parseInt(query.cursor, 10) : undefined;
+    if (cursor !== undefined && isNaN(cursor)) {
+      throw new BadRequestException('Invalid cursor');
+    }
 
-    const where: any = { status: 'READY' };
+    const where: Prisma.VideoAssetWhereInput = { status: 'READY' };
     if (query.category) where.category = query.category;
 
     const orderBy = query.trending
