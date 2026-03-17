@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Dimensions,
   ActivityIndicator,
+  StyleSheet,
 } from 'react-native';
 import { router } from 'expo-router';
 import { searchVideos } from '../api/search';
@@ -17,9 +18,8 @@ import { CATEGORIES } from '../constants/categories';
 import { VideoItem } from '../types';
 
 const { width } = Dimensions.get('window');
-const GAP = 24;
+const GAP = 12;
 const PADDING = 12;
-const ITEM_WIDTH = (width - PADDING * 2 - GAP) / 2;
 
 export function ExploreTab() {
   const [query, setQuery] = useState('');
@@ -56,7 +56,6 @@ export function ExploreTab() {
     }
   };
 
-  // Load default feed on mount
   useEffect(() => {
     loadFeed(null);
   }, []);
@@ -74,13 +73,13 @@ export function ExploreTab() {
   };
 
   return (
-    <View className="flex-1 bg-black">
+    <View style={styles.container}>
       {/* Search bar */}
-      <View className="px-3 py-3">
+      <View style={styles.searchWrap}>
         <TextInput
-          className="bg-gray-900 text-white rounded-xl px-4 py-3"
+          style={styles.searchInput}
           placeholder="Search places, cities, categories..."
-          placeholderTextColor="#666"
+          placeholderTextColor="rgba(255,255,255,0.35)"
           value={query}
           onChangeText={handleQueryChange}
           returnKeyType="search"
@@ -91,40 +90,42 @@ export function ExploreTab() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        className="px-3 mb-3"
-        contentContainerStyle={{ gap: 8 }}
+        style={styles.chipsScroll}
+        contentContainerStyle={styles.chipsContent}
       >
-        {CATEGORIES.map((cat) => (
-          <TouchableOpacity
-            key={cat.label}
-            onPress={() => handleCategoryPress(cat.value)}
-            className={`rounded-full px-4 py-2 ${
-              selectedCategory === cat.value ? 'bg-teal' : 'bg-gray-800'
-            }`}
-          >
-            <Text
-              className={`text-sm font-medium ${
-                selectedCategory === cat.value ? 'text-black' : 'text-white'
-              }`}
+        {CATEGORIES.map((cat) => {
+          const active = selectedCategory === cat.value;
+          return (
+            <TouchableOpacity
+              key={cat.label}
+              onPress={() => handleCategoryPress(cat.value)}
+              style={[styles.chip, active ? styles.chipActive : styles.chipInactive]}
             >
-              {cat.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
+              <Text style={[styles.chipText, active ? styles.chipTextActive : styles.chipTextInactive]}>
+                {cat.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </ScrollView>
+
+      {/* TRENDING NOW label — only when not searching */}
+      {query === '' && (
+        <Text style={styles.sectionLabel}>Trending Now</Text>
+      )}
 
       {/* Results grid */}
       {loading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator color="#00B4B4" />
+        <View style={styles.centered}>
+          <ActivityIndicator color="#ffffff" />
         </View>
       ) : (
         <FlatList
           data={results}
           keyExtractor={(item) => String(item.id)}
           numColumns={2}
-          contentContainerStyle={{ paddingHorizontal: PADDING }}
-          columnWrapperStyle={{ gap: GAP }}
+          contentContainerStyle={styles.gridContent}
+          columnWrapperStyle={styles.gridRow}
           renderItem={({ item }) => (
             <VideoThumbnail
               video={item}
@@ -133,8 +134,8 @@ export function ExploreTab() {
             />
           )}
           ListEmptyComponent={
-            <View className="flex-1 items-center justify-center pt-20">
-              <Text className="text-gray-500">No results found</Text>
+            <View style={styles.centered}>
+              <Text style={styles.emptyText}>No results found</Text>
             </View>
           }
         />
@@ -142,3 +143,79 @@ export function ExploreTab() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  searchWrap: {
+    paddingHorizontal: PADDING,
+    paddingVertical: 12,
+  },
+  searchInput: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    color: '#ffffff',
+    fontSize: 14,
+  },
+  chipsScroll: {
+    marginBottom: 12,
+  },
+  chipsContent: {
+    paddingHorizontal: PADDING,
+    gap: 8,
+  },
+  chip: {
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  chipActive: {
+    backgroundColor: '#ffffff',
+  },
+  chipInactive: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.18)',
+  },
+  chipText: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  chipTextActive: {
+    color: '#000000',
+  },
+  chipTextInactive: {
+    color: 'rgba(255,255,255,0.55)',
+  },
+  sectionLabel: {
+    color: 'rgba(255,255,255,0.35)',
+    fontSize: 10,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    paddingHorizontal: PADDING,
+    marginBottom: 10,
+  },
+  gridContent: {
+    paddingHorizontal: PADDING,
+    paddingBottom: 24,
+  },
+  gridRow: {
+    gap: GAP,
+  },
+  centered: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 60,
+  },
+  emptyText: {
+    color: 'rgba(255,255,255,0.35)',
+    fontSize: 14,
+  },
+});

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { apiClient } from '../../src/api/client';
 import { useAuthStore } from '../../src/store/auth.store';
@@ -26,50 +26,104 @@ export default function RegisterScreen() {
   };
 
   return (
-    <View className="flex-1 bg-black justify-center px-6">
-      <Text className="text-white text-3xl font-bold mb-2">Create Account</Text>
-      <Text className="text-gray-400 mb-8">Join Glassnik Experiences</Text>
+    <View style={styles.container}>
+      <Text style={styles.heading}>Create Account</Text>
+      <Text style={styles.subheading}>Join Glassnik Experiences</Text>
       <TextInput
-        className="bg-gray-900 text-white rounded-xl px-4 py-3 mb-4"
+        style={styles.input}
         placeholder="Email"
-        placeholderTextColor="#666"
+        placeholderTextColor="rgba(255,255,255,0.35)"
         autoCapitalize="none"
         keyboardType="email-address"
         value={email}
         onChangeText={setEmail}
       />
       <TextInput
-        className="bg-gray-900 text-white rounded-xl px-4 py-3 mb-4"
+        style={styles.input}
         placeholder="Username"
-        placeholderTextColor="#666"
+        placeholderTextColor="rgba(255,255,255,0.35)"
         autoCapitalize="none"
         value={username}
         onChangeText={setUsername}
       />
       <TextInput
-        className="bg-gray-900 text-white rounded-xl px-4 py-3 mb-6"
+        style={[styles.input, styles.inputLast]}
         placeholder="Password"
-        placeholderTextColor="#666"
+        placeholderTextColor="rgba(255,255,255,0.35)"
         secureTextEntry
         value={password}
         onChangeText={setPassword}
       />
-      <TouchableOpacity
-        className="bg-teal rounded-xl py-4 items-center"
-        onPress={handleRegister}
-        disabled={loading}
-      >
+      <TouchableOpacity style={styles.primaryBtn} onPress={handleRegister} disabled={loading}>
         {loading ? (
-          <ActivityIndicator color="#fff" />
+          <ActivityIndicator color="#000000" />
         ) : (
-          <Text className="text-white font-semibold text-base">Create Account</Text>
+          <Text style={styles.primaryBtnText}>Create Account</Text>
         )}
       </TouchableOpacity>
-      <TouchableOpacity className="mt-4 items-center" onPress={() => router.back()}>
-        <Text className="text-gray-400">
-          Already have an account? <Text className="text-teal">Sign In</Text>
+      <TouchableOpacity style={styles.linkBtn} onPress={() => router.back()}>
+        <Text style={styles.linkText}>
+          Already have an account?{' '}
+          <Text style={styles.linkTextBold}>Sign In</Text>
         </Text>
       </TouchableOpacity>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+  heading: {
+    color: '#ffffff',
+    fontSize: 32,
+    fontWeight: '700',
+    marginBottom: 6,
+  },
+  subheading: {
+    color: 'rgba(255,255,255,0.55)',
+    fontSize: 15,
+    marginBottom: 32,
+  },
+  input: {
+    backgroundColor: '#0d0d0d',
+    color: '#ffffff',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 15,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  inputLast: {
+    marginBottom: 24,
+  },
+  primaryBtn: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  primaryBtnText: {
+    color: '#000000',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  linkBtn: {
+    alignItems: 'center',
+  },
+  linkText: {
+    color: 'rgba(255,255,255,0.55)',
+    fontSize: 14,
+  },
+  linkTextBold: {
+    color: '#ffffff',
+    fontWeight: '600',
+  },
+});

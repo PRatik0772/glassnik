@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Platform,
+  StyleSheet,
 } from 'react-native';
 import { router } from 'expo-router';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
@@ -47,18 +48,18 @@ export default function ViewerScreen() {
 
   if (isLoading && videos.length === 0) {
     return (
-      <View className="flex-1 bg-black items-center justify-center">
-        <ActivityIndicator color="#00B4B4" size="large" />
+      <View style={styles.centered}>
+        <ActivityIndicator color="#ffffff" size="large" />
       </View>
     );
   }
 
   if (error && videos.length === 0) {
     return (
-      <View className="flex-1 bg-black items-center justify-center px-8">
-        <Text className="text-white text-center mb-4">{error}</Text>
-        <TouchableOpacity className="bg-teal rounded-xl px-6 py-3" onPress={reload}>
-          <Text className="text-white font-semibold">Retry</Text>
+      <View style={styles.centered}>
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity style={styles.ghostBtn} onPress={reload}>
+          <Text style={styles.ghostBtnText}>Retry</Text>
         </TouchableOpacity>
       </View>
     );
@@ -66,41 +67,68 @@ export default function ViewerScreen() {
 
   if (!isLoading && videos.length === 0) {
     return (
-      <View className="flex-1 bg-black items-center justify-center">
-        <Text className="text-gray-400 text-lg">No videos yet</Text>
+      <View style={styles.centered}>
+        <Text style={styles.emptyText}>No videos yet</Text>
       </View>
     );
   }
 
   const content = (
-      <View className="flex-1 bg-black">
-        <FlatList
-          ref={flatListRef}
-          data={videos}
-          keyExtractor={(item) => String(item.id)}
-          renderItem={({ item, index }) => (
-            <VideoItem_ item={item} isActive={index === currentIndex} />
-          )}
-          pagingEnabled
-          showsVerticalScrollIndicator={false}
-          snapToInterval={height}
-          decelerationRate="fast"
-          getItemLayout={(_, index) => ({ length: height, offset: height * index, index })}
-          onMomentumScrollEnd={(e) => {
-            const index = Math.round(e.nativeEvent.contentOffset.y / height);
-            setCurrentIndex(index);
-          }}
-        />
-        {/* Discovery button */}
-        <TouchableOpacity
-          className="absolute top-12 left-4 bg-black/40 rounded-full px-3 py-1"
-          onPress={() => router.push('/discovery')}
-        >
-          <Text className="text-white text-xs font-medium">Explore ↓</Text>
-        </TouchableOpacity>
-      </View>
+    <View style={styles.fill}>
+      <FlatList
+        ref={flatListRef}
+        data={videos}
+        keyExtractor={(item) => String(item.id)}
+        renderItem={({ item, index }) => (
+          <VideoItem_ item={item} isActive={index === currentIndex} />
+        )}
+        pagingEnabled
+        showsVerticalScrollIndicator={false}
+        snapToInterval={height}
+        decelerationRate="fast"
+        getItemLayout={(_, index) => ({ length: height, offset: height * index, index })}
+        onMomentumScrollEnd={(e) => {
+          const index = Math.round(e.nativeEvent.contentOffset.y / height);
+          setCurrentIndex(index);
+        }}
+      />
+    </View>
   );
 
   if (Platform.OS === 'web') return content;
   return <GestureDetector gesture={swipeDown}>{content}</GestureDetector>;
 }
+
+const styles = StyleSheet.create({
+  fill: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  centered: {
+    flex: 1,
+    backgroundColor: '#000',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+  },
+  errorText: {
+    color: '#ffffff',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  ghostBtn: {
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+    borderRadius: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+  },
+  ghostBtnText: {
+    color: '#ffffff',
+    fontWeight: '600',
+  },
+  emptyText: {
+    color: 'rgba(255,255,255,0.35)',
+    fontSize: 16,
+  },
+});

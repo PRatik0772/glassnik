@@ -18,200 +18,302 @@ The MVP covers sections 1–7 of the UX spec:
 6. Explore tab (default discovery view)
 7. Category filtering
 
-Sections 8–15 (Trending, Nearby, Videographers, Global Attractions, Spotify, Upload, AI processing) are post-MVP and are scaffolded but not implemented.
+The following are out of scope for MVP and will NOT be built (not even scaffolded):
+- Trending tab, Nearby tab, Videographers tab, Global map, Spotify
+- Upload screen + AI processing pipeline
+- Live streaming (separate Glassnik platform spec)
 
 ---
 
 ## 2. Tech Stack
 
-| Layer | Choice | Reason |
-|-------|--------|--------|
-| Framework | Expo SDK 51+ with Expo Router | File-based routing, deep linking, fast setup |
-| Styling | NativeWind v4 (Tailwind for RN) | Utility-first, consistent with web conventions |
+| Layer | Choice | Notes |
+|-------|--------|-------|
+| Framework | Expo SDK 51+ with Expo Router | File-based routing, deep linking |
+| Styling | NativeWind v4 | Tailwind utility classes for RN |
 | State | Zustand | Lightweight, no boilerplate |
-| API client | Axios | Simple, interceptor support for JWT refresh |
-| Video playback | Mux (`@mux/mux-player-react-native`) | Official RN SDK, usage-based pricing |
+| API client | Axios | JWT interceptor for token refresh |
+| Video playback | `@mux/mux-player-react-native` | Requires EAS development build — Expo Go is NOT supported |
 | Gestures | `react-native-gesture-handler` | Tap/swipe on video player |
 | Secure storage | `expo-secure-store` | JWT token persistence |
-| Location | `expo-location` | Nearby tab (scaffolded) |
 | Sharing | `expo-sharing` + `expo-clipboard` | Share button on viewer |
+
+> **Important:** Because `@mux/mux-player-react-native` is a native module, the app cannot be tested with Expo Go. An **EAS development build** must be created before any video playback can be tested on device.
 
 ---
 
 ## 3. Project Structure
 
 ```
-app/                                    ← Expo Router root
+app/
 ├── (auth)/
 │   ├── _layout.tsx
 │   ├── login.tsx
 │   └── register.tsx
 ├── (viewer)/
-│   ├── _layout.tsx                     ← Full-screen layout, hides status bar
-│   └── index.tsx                       ← Eye-POV player (app entry point)
-├── discovery.tsx                       ← Discovery modal (··· button)
+│   ├── _layout.tsx          ← Full-screen layout, hides status bar, dark bg
+│   └── index.tsx            ← Eye-POV player — app entry point for guests + authed users
+├── discovery.tsx            ← Discovery modal (··· button)
 ├── profile/
-│   └── [id].tsx                        ← Videographer profile page
-├── upload.tsx                          ← Upload questionnaire (scaffolded)
-└── _layout.tsx                         ← Root layout — auth gate
+│   └── [id].tsx             ← Videographer profile page
+└── _layout.tsx              ← Root layout — guest mode allowed (see Section 4.1)
 
 src/
 ├── api/
-│   ├── client.ts                       ← Axios instance + JWT interceptor
-│   ├── feed.ts                         ← GET /mobile/feed
-│   ├── user.ts                         ← GET /user/:id/profile
-│   └── search.ts                       ← GET /mobile/search
+│   ├── client.ts            ← Axios instance + JWT refresh interceptor
+│   ├── feed.ts              ← GET /mobile/feed
+│   ├── user.ts              ← GET /user/:id/profile
+│   └── search.ts            ← GET /mobile/search
 ├── store/
-│   ├── auth.store.ts                   ← accessToken, refreshToken, user flags
-│   └── feed.store.ts                   ← videos[], currentIndex, activeCategory
+│   ├── auth.store.ts        ← accessToken, refreshToken, user flags (nullable for guests)
+│   └── feed.store.ts        ← videos[], currentIndex, activeCategory
 ├── components/
-│   ├── VideoPlayer.tsx                 ← Mux full-screen player wrapper
-│   ├── VideoOverlay.tsx                ← Metadata + controls overlay
-│   ├── CategorySelector.tsx            ← Bottom sheet with category list
-│   ├── DiscoveryModal.tsx              ← Discovery screen container
-│   ├── ExploreTab.tsx                  ← 2-column thumbnail grid
-│   └── VideographerCard.tsx            ← Avatar + name + follow button
+│   ├── VideoPlayer.tsx      ← Mux full-screen player wrapper
+│   ├── VideoOverlay.tsx     ← Metadata + controls overlay
+│   ├── CategorySelector.tsx ← Bottom sheet category list
+│   ├── DiscoveryModal.tsx   ← Discovery screen container + Explore tab
+│   └── VideographerCard.tsx ← Avatar + name row
 └── hooks/
-    ├── useFeed.ts                      ← Paginated video fetching + pre-fetch
-    └── useVideoGestures.ts             ← Tap → next, swipe down → previous
+    ├── useFeed.ts           ← Paginated video fetching + pre-fetch logic
+    └── useVideoGestures.ts  ← Tap → next, swipe down → previous
 ```
 
 ---
 
-## 4. Screen Designs
+## 4. Design System
 
-### 4.1 Full-Screen Eye-POV Viewer
+### 4.0 Color & Visual Language
 
-**Trigger:** App open (authenticated or guest)
+**Palette — Pure Black + White. Zero color accents.**
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `bg-base` | `#000000` | App background, video screen |
+| `bg-surface` | `#0d0d0d` | Sheets, cards, modals |
+| `bg-glass` | `rgba(255,255,255,0.08)` | Glass-frosted buttons, chips |
+| `border-glass` | `rgba(255,255,255,0.12)` | Button + card borders |
+| `border-muted` | `rgba(255,255,255,0.06)` | Separators in sheets |
+| `text-primary` | `rgba(255,255,255,1.0)` | Headlines, active labels |
+| `text-secondary` | `rgba(255,255,255,0.55)` | Subtext, metadata |
+| `text-muted` | `rgba(255,255,255,0.35)` | Timestamps, placeholders |
+| `icon-default` | `rgba(255,255,255,0.85)` | Icons at rest |
+
+**Typography:**
+
+| Role | Weight | Tracking |
+|------|--------|---------|
+| Place name | Bold (700) | Normal |
+| Location (City, Country) | Regular (400) | Wide (0.12em) |
+| Category badge | Medium (500) | Wide (0.08em), uppercase |
+| Screen title (Explore) | Bold (700) | Normal |
+| Chip labels | Medium (500) | Normal |
+
+**Ghost Lens Vignette:**
+Applied to every full-screen video as a `position: absolute` overlay, full bleed, no pointer events.
+```
+radial-gradient(ellipse 85% 85% at 50% 50%, transparent 55%, rgba(0,0,0,0.65) 100%)
+```
+This mimics the curved optical falloff of a wide-angle glass lens.
+
+**Glass Buttons:**
+All action buttons on the viewer right rail are circular, 48×48dp, with:
+- Background: `rgba(255,255,255,0.10)`
+- Border: 1px `rgba(255,255,255,0.18)`
+- Backdrop blur: `blur(12px)`
+- Icon color: white at 0.85 opacity
+- Active state: background tints to `rgba(255,255,255,0.20)`
+
+---
+
+## 5. Screen Designs
+
+### 5.1 Full-Screen Eye-POV Viewer
+
+**Guest mode:** `GET /mobile/feed` is publicly accessible (no auth guard). The root layout does NOT redirect to login on first launch. Users can watch without an account.
+
+**Trigger:** App open
+
 **Layout:**
 ```
-┌─────────────────────────────────┐
-│ [Avatar] Videographer Name [═══]│  ← top-left: avatar+name tap→profile
-│                                 │     top-right: teal category button
-│                                 │
-│     (full-screen video)         │  ← Mux player, autoplay, muted default
-│                                 │
-│                                 │
-│  Place Name              [↑↑]  │  ← bottom-left: place + city, country
-│  City, Country                  │     bottom-right: share button
-└─────────────────────────────────┘
-     [···] top corner → Discovery
+┌──────────────────────────────────────┐
+│ [Avatar 36px]  Username              │  ← top-left, tap → profile
+│                                      │
+│  (ghost lens vignette over video)    │  ← full-screen Mux video, autoplay, sound on
+│                              [♥]    │  ← right rail: Like
+│                              [↗]    │  ← right rail: Share
+│                              [⊞]    │  ← right rail: Explore (opens discovery)
+│                              [◈]    │  ← right rail: Category
+│                                      │
+│  [CATEGORY BADGE]                    │  ← bottom-left, uppercase pill
+│  Place Name                          │  ← bold, white
+│  City, Country                       │  ← muted, wide-tracked
+└──────────────────────────────────────┘
+```
+
+**Top bar (no background, edge-to-edge):**
+- Avatar: 36×36dp circle, `border: 1.5px solid rgba(255,255,255,0.6)`
+- Username: `text-primary`, font-weight 500, 14sp
+- No category button in top bar — replaced by right rail
+
+**Right rail (TikTok-style, vertically centered):**
+4 glass-frosted circular buttons stacked with 16dp gap, positioned 16dp from right edge:
+1. **Like** — heart icon (fill on tap, no counter in MVP)
+2. **Share** — arrow-up icon (triggers `expo-sharing`)
+3. **Explore** — grid icon (opens Discovery modal)
+4. **Category** — tag/compass icon (opens Category bottom sheet)
+
+**Bottom-left metadata stack** (24dp from edge, 32dp from bottom safe area):
+- Category badge: 24dp height pill, `bg-glass` border, text `text-secondary`, uppercase 10sp
+- Place name: Bold 22sp, `text-primary`
+- Location: Regular 13sp, `text-secondary`, letter-spacing 0.12em
+
+**Vignette overlay:** `position: absolute`, full bleed, `pointerEvents: 'none'`
+```
+background: radial-gradient(ellipse 85% 85% at 50% 50%, transparent 55%, rgba(0,0,0,0.65) 100%)
 ```
 
 **Gestures:**
 - Tap → advance to next video (`currentIndex + 1`)
 - Swipe down → go to previous video (`currentIndex - 1`)
 
-**States:**
-- Loading: full-screen dark background + centered spinner
-- Empty: "No videos available" message + refresh button
-- Error: "Something went wrong" + retry button
-- Success: video autoplays
+**Pre-fetch:** When `currentIndex === videos.length - 3`, fetch next page and append.
 
-**Pre-fetch logic:** When user reaches `currentIndex === videos.length - 3`, fetch the next page and append to store.
+**States:**
+
+| State | Behaviour |
+|-------|-----------|
+| Loading | `#000` full-screen + centered white spinner |
+| Empty | "No videos available" + white ghost Refresh button |
+| Error | "Something went wrong" + white ghost Retry button |
+| Success | Video autoplays with overlay |
 
 ---
 
-### 4.2 Category Selector
+### 5.2 Category Selector
 
-**Trigger:** Tap teal category button (top right of viewer)
-**Behaviour:** Opens a bottom sheet with a list of categories. Selecting a category resets the feed and fetches `GET /mobile/feed?category=<selected>`.
+**Trigger:** Tap Category button (right rail, bottom)
+**Behaviour:** Opens a bottom sheet. Selecting a category sets `feed.store.activeCategory`, resets the video list, and fetches `GET /mobile/feed?category=<slug>`.
+
+**Bottom sheet styling:**
+- Background: `#0d0d0d`
+- Handle: 4×36dp rounded pill, `rgba(255,255,255,0.25)`
+- List items: 48dp height, `text-primary` label, `text-secondary` video count
+- Active item: white checkmark icon at right edge
+- Separators: 1px `rgba(255,255,255,0.06)`
 
 **Categories (MVP):**
-Street Scenes, Food & Markets, Nature & Adventure, Historic Sites, Beaches & Islands, Shopping, Events
+`All`, `Street Scenes`, `Food & Markets`, `Nature & Adventure`, `Historic Sites`, `Beaches & Islands`, `Shopping`, `Events`
 
 ---
 
-### 4.3 Discovery Screen
+### 5.3 Discovery Screen
 
-**Trigger:** Tap `···` button on viewer
-**Layout:** Full-screen modal with search bar at top and horizontal tab navigation.
+**Trigger:** Tap Explore button (right rail, third from top)
+**Layout:** Full-screen modal, `#000` background, drag-to-dismiss
 
-**Tabs (MVP — Explore only fully implemented):**
-- Explore (default)
-- Videographers (scaffolded)
-- Trending (scaffolded)
-- Nearby (scaffolded)
-- Global (scaffolded)
-- Spotify (scaffolded)
+**Header:** "Explore" in Bold 28sp, `text-primary`, 24dp top padding
 
-**States:** Loading skeleton, empty state with prompt, error with retry.
+**Search bar:** Glass-frosted input, `bg-glass` background, 1px `border-glass` border, 14dp corner radius, placeholder `text-muted`
+
+**Tab row (horizontal scroll, 16dp gap):**
+- Active chip: solid white bg + black text, 24dp height pill
+- Inactive chip: `bg-glass` border, `text-secondary` text (ghost style)
+- MVP: only "Explore" chip is tappable
+
+**Stub tabs** (Videographers, Trending, Nearby, Global, Spotify): visible but non-functional in MVP — chips render disabled at 0.35 opacity.
 
 ---
 
-### 4.4 Explore Tab
+### 5.4 Explore Tab
+
+**Section label:** "TRENDING NOW" — `text-muted`, uppercase, 10sp, wide-tracked
+
+**2-column masonry grid:**
+- Card: `bg-surface` (#0d0d0d), 8dp border radius, 1px `border-glass`
+- Thumbnail: 16:9 image, fills card width, rounded top corners
+- Card footer: place (13sp bold `text-primary`) + city (11sp `text-secondary`), 8dp padding
+
+**Behaviour:**
+- Active chip → filters grid via `GET /mobile/feed?category=<slug>`
+- Search input → calls `GET /mobile/search?q=<text>` (debounced 300ms)
+- Tap thumbnail → closes Discovery modal + jumps viewer to that video
+
+**States:** Loading skeleton (ghost-white pulse cards), Empty ("No results"), Error + retry.
+
+---
+
+### 5.5 Videographer Profile Page
+
+**Trigger:** Tap videographer name/avatar in viewer
+**Background:** `#000000`
 
 **Layout:**
 ```
-Search bar: "Search location or videos..."
-Category chips: [All] [Temples] [Markets] [Camping] ...  (horizontal scroll)
-Section header: "Trending now"
-2-column masonry grid of video thumbnails
-  Each card: thumbnail image + place name + city overlay
+← Back (white, top-left)
+[Avatar 80px — white ring 2px border]
+Display Name  (Bold 20sp, text-primary)
+@username     (Regular 13sp, text-secondary)
+─────────────── (hairline divider, rgba(255,255,255,0.08))
+[X Videos]  |  [Y Followers*]   (stats separated by hairline vertical)
+[Follow]   ← ghost button: border rgba(255,255,255,0.25), white text, disabled in MVP
+─────────────────────────────────
+Tight 3-col video grid (2dp gaps, no padding)
 ```
 
-**Behaviour:**
-- Tapping a category chip filters the grid
-- Tapping a thumbnail closes the Discovery modal and jumps the viewer to that video
+**Stats row:** each stat is `text-primary` number (Bold 17sp) over `text-muted` label (11sp Regular)
+
+**Follow button:** 38dp height, full-width (80% of screen), `bg-glass` border, `text-primary`, disabled+opacity 0.4 in MVP
+
+> **Note:** Follow/follower functionality requires a `Follow` junction table in the database, out of scope for MVP. Button renders disabled, follower count shows `0`.
+
+**Behaviour:** Tap video in grid → opens viewer starting at that video, filtered to this videographer.
 
 ---
 
-### 4.5 Videographer Profile Page
+## 6. Backend Changes Required
 
-**Trigger:** Tap videographer name or avatar in viewer
-**Layout:** Slides up over viewer as a modal stack.
+### 6.1 Prisma Schema — VideoAsset
 
-```
-← Back    Videographer Name
-[Avatar 80px]
-Display Name
-@username
-[X videos]  [Y followers]
-[Follow / Following button]
-3-column grid of their uploaded videos
-```
+Add the following fields to the `VideoAsset` model:
 
-**Behaviour:**
-- Tapping a video in the grid → opens viewer filtered to that videographer's content, starting at that video
-
----
-
-## 5. Backend Changes Required
-
-The following changes must be made to the NestJS backend before mobile development begins:
-
-### 5.1 VideoAsset Schema (Prisma)
-
-Add to `VideoAsset` model:
 ```prisma
-place          String?
-city           String?
-country        String?
-category       String?
+muxAssetId     String?   @map("mux_asset_id") @db.VarChar(255)
+muxPlaybackId  String?   @map("mux_playback_id") @db.VarChar(255)
+place          String?   @db.VarChar(255)
+city           String?   @db.VarChar(100)
+country        String?   @db.VarChar(100)
+category       String?   @db.VarChar(100)
 thumbnailUrl   String?   @map("thumbnail_url")
 viewCount      Int       @default(0) @map("view_count")
 ```
 
-### 5.2 New / Modified API Endpoints
+> `muxPlaybackId` is required for the Mux player to render video. Without it, no video can play.
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/mobile/feed` | Existing — add `category` and `trending` query params |
-| GET | `/mobile/search?q=` | New — search by place, city, videographer |
-| GET | `/user/:id/profile` | New — public profile with video count + follower count |
+### 6.2 Prisma Schema — Fix avatarUrl column name
 
-### 5.3 Feed Response Shape
+The current `avatarUrl` field maps to `"avatar_varcharurl"` which is a typo. Fix in the next migration:
+```prisma
+avatarUrl  String?  @map("avatar_url")
+```
 
-Each video in the feed must include:
+### 6.3 API Endpoints
+
+#### `GET /mobile/feed` — Update existing
+
+Add optional query params:
+- `category` (string slug) — filter by category
+- `trending` (boolean) — if `true`, sort by `viewCount DESC` instead of `createdAt DESC`
+
+Response shape per item:
 ```json
 {
   "id": 1,
-  "publicUrl": "https://...",
+  "muxPlaybackId": "abc123",
   "thumbnailUrl": "https://...",
   "place": "Chatuchak Market",
   "city": "Bangkok",
   "country": "Thailand",
-  "category": "Street Scenes",
+  "category": "street-scenes",
   "viewCount": 2300,
   "owner": {
     "id": 5,
@@ -222,44 +324,40 @@ Each video in the feed must include:
 }
 ```
 
----
+#### `GET /mobile/search?q=` — New endpoint
 
-## 6. Screen State Requirements
+Search across `place`, `city`, `country`, `owner.username`, `owner.displayName`.
+Response: same shape as feed items array (no pagination for MVP).
 
-All screens must implement these four states:
+#### `GET /user/:id/profile` — Update existing `/user/:id`
 
-| State | Viewer | Discovery | Profile |
-|-------|--------|-----------|---------|
-| Loading | Full-screen spinner | Skeleton grid | Skeleton rows |
-| Empty | "No videos" + refresh | "No results" + clear filters | "No videos yet" |
-| Error | "Something went wrong" + retry | "Couldn't load" + retry | "Couldn't load" + retry |
-| Success | Video autoplays | Grid renders | Grid renders |
-
----
-
-## 7. Out of Scope (Post-MVP)
-
-- Trending tab implementation
-- Nearby tab (GPS-based filtering)
-- Videographers search tab
-- Global attractions map
-- Spotify integration
-- Upload screen + AI processing pipeline
-- Authentication (viewer can watch without login for MVP)
-- Live streaming (covered in separate Glassnik platform spec)
+Update `getPublicProfile()` to also return:
+```json
+{
+  "id": 5,
+  "username": "jasoncarter",
+  "displayName": "Jason Carter",
+  "avatarUrl": "https://...",
+  "videoCount": 42,
+  "followerCount": 0
+}
+```
+And include a `videos` array of the user's uploaded videos (same shape as feed items).
 
 ---
 
-## 8. Build Order
+## 7. Build Order
 
-1. Backend schema migration (add VideoAsset fields)
-2. Update `/mobile/feed` to support category + trending filters
-3. Add `/mobile/search` endpoint
-4. Add `/user/:id/profile` endpoint
-5. Scaffold Expo app in `app/` folder
-6. Auth screens (login + register)
-7. Core viewer screen (VideoPlayer + VideoOverlay + gestures)
-8. Category selector bottom sheet
-9. Discovery modal + Explore tab
-10. Videographer profile page
-11. State handling (loading/empty/error) on all screens
+1. Backend: add Mux fields + location/category/viewCount fields to VideoAsset via Prisma migration
+2. Backend: fix `avatarUrl` column name typo
+3. Backend: update `GET /mobile/feed` to support `category` and `trending` filters
+4. Backend: add `GET /mobile/search` endpoint
+5. Backend: update `GET /user/:id` to return `videoCount`, `followerCount`, and `videos[]`
+6. Mobile: initialise Expo app in `app/` folder with Expo Router + NativeWind
+7. Mobile: configure EAS build for development client
+8. Mobile: auth screens (login + register)
+9. Mobile: core viewer screen (VideoPlayer + VideoOverlay + gestures)
+10. Mobile: category selector bottom sheet
+11. Mobile: discovery modal + explore tab
+12. Mobile: videographer profile page
+13. Mobile: loading/empty/error states on all screens

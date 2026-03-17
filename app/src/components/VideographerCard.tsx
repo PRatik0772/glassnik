@@ -1,4 +1,4 @@
-import { View, Text, Image, TouchableOpacity } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { UserProfile } from '../types';
 
 interface Props {
@@ -7,34 +7,104 @@ interface Props {
 
 export function VideographerCard({ profile }: Props) {
   return (
-    <View className="items-center pt-12 pb-6 px-6 bg-black">
+    <View style={styles.container}>
+      {/* Avatar with white ring */}
       {profile.avatarUrl ? (
-        <Image
-          source={{ uri: profile.avatarUrl }}
-          className="w-20 h-20 rounded-full mb-3"
-        />
+        <Image source={{ uri: profile.avatarUrl }} style={styles.avatar} />
       ) : (
-        <View className="w-20 h-20 rounded-full bg-gray-700 mb-3" />
+        <View style={[styles.avatar, styles.avatarFallback]} />
       )}
-      <Text className="text-white text-xl font-bold">{profile.displayName}</Text>
-      <Text className="text-gray-400 text-sm mb-4">@{profile.username}</Text>
-      <View className="flex-row gap-8 mb-4">
-        <View className="items-center">
-          <Text className="text-white font-bold text-lg">{profile.videoCount}</Text>
-          <Text className="text-gray-400 text-xs">Videos</Text>
+
+      <Text style={styles.displayName}>{profile.displayName}</Text>
+      <Text style={styles.username}>@{profile.username}</Text>
+
+      {/* Stats row with hairline divider */}
+      <View style={styles.statsRow}>
+        <View style={styles.stat}>
+          <Text style={styles.statNumber}>{profile.videoCount}</Text>
+          <Text style={styles.statLabel}>Videos</Text>
         </View>
-        <View className="items-center">
-          <Text className="text-white font-bold text-lg">{profile.followerCount}</Text>
-          <Text className="text-gray-400 text-xs">Followers</Text>
+        <View style={styles.divider} />
+        <View style={styles.stat}>
+          <Text style={styles.statNumber}>{profile.followerCount}</Text>
+          <Text style={styles.statLabel}>Followers</Text>
         </View>
       </View>
+
       {/* Follow button — post-MVP, shown but disabled */}
-      <TouchableOpacity
-        className="border border-white rounded-full px-8 py-2 opacity-40"
-        disabled
-      >
-        <Text className="text-white font-medium">Follow</Text>
+      <TouchableOpacity style={styles.followBtn} disabled>
+        <Text style={styles.followText}>Follow</Text>
       </TouchableOpacity>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+    paddingTop: 48,
+    paddingBottom: 24,
+    paddingHorizontal: 24,
+    backgroundColor: '#000',
+  },
+  avatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    marginBottom: 12,
+  },
+  avatarFallback: {
+    backgroundColor: '#333',
+  },
+  displayName: {
+    color: '#ffffff',
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  username: {
+    color: 'rgba(255,255,255,0.55)',
+    fontSize: 13,
+    marginBottom: 20,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  stat: {
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  statNumber: {
+    color: '#ffffff',
+    fontSize: 17,
+    fontWeight: '700',
+  },
+  statLabel: {
+    color: 'rgba(255,255,255,0.35)',
+    fontSize: 11,
+    marginTop: 2,
+  },
+  divider: {
+    width: 1,
+    height: 40,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  followBtn: {
+    width: '80%',
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.25)',
+    alignItems: 'center',
+    opacity: 0.4,
+  },
+  followText: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: '500',
+  },
+});
