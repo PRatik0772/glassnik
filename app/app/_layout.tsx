@@ -31,6 +31,8 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="(viewer)" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
         <Stack.Screen name="profile/[id]" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="discovery" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="upload" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
       </Stack>
     </GestureHandlerRootView>
   );

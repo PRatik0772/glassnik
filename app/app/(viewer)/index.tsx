@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import {
-  View, FlatList, Dimensions, Text, TouchableOpacity, StyleSheet, Platform,
+  View, FlatList, Dimensions, Text, TouchableOpacity,
+  StyleSheet, Platform, Share,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,195 +16,397 @@ import { C, F } from '../../src/constants/theme';
 
 const { width, height } = Dimensions.get('window');
 
+const CATEGORIES = [
+  'Street Scenes', 'Food & Markets', 'Nature & Adventure',
+  'Historic Sites', 'Beaches & Islands', 'Shopping', 'Events',
+];
+
+// ─── Category overlay ────────────────────────────────────────────────────────
+function CategoryOverlay({
+  visible, selected, onSelect, onClose,
+}: {
+  visible: boolean;
+  selected: string;
+  onSelect: (c: string) => void;
+  onClose: () => void;
+}) {
+  if (!visible) return null;
+  return (
+    <View style={styles.overlay}>
+      <TouchableOpacity style={StyleSheet.absoluteFill} onPress={onClose} activeOpacity={1} />
+      <View style={styles.categoryPanel}>
+        <Text style={styles.categoryPanelSection}>Categories</Text>
+        {CATEGORIES.map((cat) => (
+          <TouchableOpacity
+            key={cat}
+            style={styles.categoryRow}
+            onPress={() => { onSelect(cat); onClose(); }}
+            activeOpacity={0.7}
+          >
+            <Feather
+              name={selected === cat ? 'check-circle' : 'circle'}
+              size={16}
+              color={selected === cat ? '#4ECDC4' : 'rgba(255,255,255,0.4)'}
+              style={{ marginRight: 12 }}
+            />
+            <Text style={[styles.categoryRowText, selected === cat && { color: '#4ECDC4' }]}>
+              {cat}
+            </Text>
+          </TouchableOpacity>
+        ))}
+        <Text style={styles.categoryPanelSection}>Discover</Text>
+        {['Explore Nearby', 'Discover New Countries', 'Global Highlights'].map((label) => (
+          <TouchableOpacity
+            key={label}
+            style={styles.categoryRow}
+            onPress={() => { router.push('/discovery' as any); onClose(); }}
+            activeOpacity={0.7}
+          >
+            <Feather name="compass" size={16} color="rgba(255,255,255,0.4)" style={{ marginRight: 12 }} />
+            <Text style={styles.categoryRowText}>{label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+// ─── Single feed item ────────────────────────────────────────────────────────
 function FeedItem({
-  item, isActive, muted, onToggleMute,
+  item, isActive, muted, onToggleMute, onTapNext, categoryFilter, onCategoryPress,
 }: {
   item: VideoItem;
   isActive: boolean;
   muted: boolean;
   onToggleMute: () => void;
+  onTapNext: () => void;
+  categoryFilter: string;
+  onCategoryPress: () => void;
 }) {
   const insets = useSafeAreaInsets();
   const { isSaved, toggleSaved } = useSavedStore();
   const [liked, setLiked] = useState(false);
   const saved = isSaved(String(item.id));
 
+  const handleShare = useCallback(async () => {
+    try {
+      await Share.share({
+        message: `Watch "${item.place}" on Glassnik — the Eye-POV travel experience app`,
+        url: `https://glassnik.com/video/${item.id}`,
+      });
+    } catch {}
+  }, [item.place, item.id]);
+
+  const initial = (item.owner.displayName || item.owner.username || '?')[0].toUpperCase();
+
   return (
     <View style={{ width, height }}>
-      {/* Video */}
-      <VideoPlayer video={item} isActive={isActive} muted={muted} />
+      {/* Tap anywhere on video = next video */}
+      <TouchableOpacity
+        activeOpacity={1}
+        onPress={onTapNext}
+        style={StyleSheet.absoluteFill}
+      >
+        <VideoPlayer video={item} isActive={isActive} muted={muted} />
+      </TouchableOpacity>
 
-      {/* Warm top vignette */}
+      {/* Top warm vignette */}
       <LinearGradient
         colors={[C.vignette, 'transparent']}
-        style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 160 }}
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 180 }}
         pointerEvents="none"
       />
-      {/* Dark bottom vignette */}
+      {/* Bottom dark vignette */}
       <LinearGradient
-        colors={['transparent', 'rgba(20,18,16,0.80)']}
-        style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 300 }}
+        colors={['transparent', 'rgba(10,9,8,0.88)']}
+        style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 320 }}
         pointerEvents="none"
       />
 
-      {/* Top bar */}
-      <View style={[styles.topBar, { top: insets.top + 12 }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
-          <Feather name="chevron-left" size={28} color={C.white} />
-        </TouchableOpacity>
-        <View style={styles.toggle}>
-          <Text style={styles.toggleActive}>For You</Text>
-          <Text style={styles.toggleInactive}>Following</Text>
+      {/* ── TOP BAR ── */}
+      <View style={[styles.topBar, { top: insets.top + 10 }]} pointerEvents="box-none">
+        {/* Left: back + videographer name + avatar */}
+        <View style={styles.topLeft} pointerEvents="box-none">
+          <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)' as any)} style={styles.backBtn} activeOpacity={0.7}>
+            <Feather name="chevron-left" size={26} color={C.white} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => router.push(`/profile/${item.owner.id}` as any)}
+            style={styles.videographerBtn}
+            activeOpacity={0.8}
+          >
+            <View style={styles.miniAvatar}>
+              <Text style={styles.miniAvatarText}>{initial}</Text>
+            </View>
+            <Text style={styles.videographerName} numberOfLines={1}>
+              @{item.owner.username}
+            </Text>
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity onPress={onToggleMute} style={styles.muteBtn} activeOpacity={0.7}>
-          <Feather name={muted ? 'volume-x' : 'volume-2'} size={20} color={C.white} />
-        </TouchableOpacity>
+
+        {/* Right: mute + teal Discovery button */}
+        <View style={styles.topRight} pointerEvents="box-none">
+          <TouchableOpacity onPress={onToggleMute} style={styles.iconBtn} activeOpacity={0.7}>
+            <Feather name={muted ? 'volume-x' : 'volume-2'} size={18} color={C.white} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => router.push('/discovery' as any)}
+            style={styles.discoveryBtn}
+            activeOpacity={0.8}
+          >
+            <Feather name="menu" size={18} color="#fff" />
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* Bottom-left metadata */}
-      <View style={[styles.bottomLeft, { bottom: insets.bottom + 90 }]}>
-        <Text style={styles.metaUsername}>@{item.owner.username}</Text>
+      {/* Category chip */}
+      <TouchableOpacity
+        onPress={onCategoryPress}
+        style={[styles.categoryChip, { top: insets.top + 66 }]}
+        activeOpacity={0.8}
+      >
+        <Feather name="layers" size={12} color="#fff" style={{ marginRight: 5 }} />
+        <Text style={styles.categoryChipText}>{categoryFilter}</Text>
+        <Feather name="chevron-down" size={12} color="rgba(255,255,255,0.6)" style={{ marginLeft: 4 }} />
+      </TouchableOpacity>
+
+      {/* ── BOTTOM CENTRE: Place + Location ── */}
+      <View style={[styles.bottomMeta, { bottom: insets.bottom + 82 }]} pointerEvents="none">
         <Text style={styles.metaPlace}>{item.place}</Text>
         <Text style={styles.metaLocation}>
-          {item.city?.toUpperCase()}, {item.country?.toUpperCase()}
+          {item.city}{item.city && item.country ? ', ' : ''}{item.country}
         </Text>
       </View>
 
-      {/* Right rail */}
-      <View style={[styles.rightRail, { bottom: insets.bottom + 100 }]}>
-        {/* Avatar */}
-        <TouchableOpacity
-          onPress={() => router.push(`/profile/${item.owner.id}`)}
-          style={styles.avatarWrap}
-          activeOpacity={0.8}
-        >
-          <View style={styles.railAvatar} />
-          <View style={styles.avatarPlus}>
-            <Text style={styles.avatarPlusText}>+</Text>
-          </View>
-        </TouchableOpacity>
+      {/* ── BOTTOM RIGHT: Share ── */}
+      <TouchableOpacity
+        style={[styles.shareBtn, { bottom: insets.bottom + 82 }]}
+        onPress={handleShare}
+        activeOpacity={0.7}
+      >
+        <Feather name="share-2" size={22} color={C.white} />
+      </TouchableOpacity>
 
-        {/* Like */}
+      {/* ── RIGHT RAIL ── */}
+      <View style={[styles.rightRail, { bottom: insets.bottom + 190 }]}>
         <TouchableOpacity style={styles.railBtn} onPress={() => setLiked(!liked)} activeOpacity={0.7}>
-          <Feather name="heart" size={28} color={liked ? '#E8735A' : C.white} />
+          <Feather name="heart" size={26} color={liked ? '#E8735A' : C.white} />
           <Text style={[styles.railCount, liked && { color: '#E8735A' }]}>
-            {liked ? '1' : '0'}
+            {(item.viewCount + (liked ? 1 : 0)).toLocaleString()}
           </Text>
         </TouchableOpacity>
-
-        {/* Share */}
-        <TouchableOpacity style={styles.railBtn} activeOpacity={0.7}>
-          <Feather name="share-2" size={26} color={C.white} />
-          <Text style={styles.railCount}>Share</Text>
-        </TouchableOpacity>
-
-        {/* Bookmark */}
         <TouchableOpacity
           style={styles.railBtn}
           onPress={() => toggleSaved(String(item.id))}
           activeOpacity={0.7}
         >
-          <Feather name="bookmark" size={26} color={saved ? C.sand : C.white} />
+          <Feather name="bookmark" size={24} color={saved ? C.sand : C.white} />
           <Text style={[styles.railCount, saved && { color: C.sand }]}>Save</Text>
-        </TouchableOpacity>
-
-        {/* Explore */}
-        <TouchableOpacity
-          style={styles.railBtn}
-          onPress={() => router.push('/(tabs)/explore')}
-          activeOpacity={0.7}
-        >
-          <Feather name="compass" size={26} color={C.white} />
-          <Text style={styles.railCount}>Explore</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 }
 
+// ─── Web wrapper ─────────────────────────────────────────────────────────────
+function WebFeed({
+  videos, currentIndex, setCurrentIndex, muted, toggleMute, categoryFilter, setCategoryFilter,
+}: {
+  videos: VideoItem[];
+  currentIndex: number;
+  setCurrentIndex: (i: number) => void;
+  muted: boolean;
+  toggleMute: () => void;
+  categoryFilter: string;
+  setCategoryFilter: (c: string) => void;
+}) {
+  const containerRef = useRef<any>(null);
+  const [showCatPanel, setShowCatPanel] = useState(false);
+
+  const goNext = useCallback((index: number) => {
+    if (index < videos.length - 1) {
+      const next = index + 1;
+      setCurrentIndex(next);
+      containerRef.current?.scrollTo({ top: next * window.innerHeight, behavior: 'smooth' });
+    }
+  }, [videos.length, setCurrentIndex]);
+
+  return (
+    // @ts-ignore
+    <div
+      ref={containerRef}
+      style={{ height: '100vh', overflowY: 'scroll', scrollSnapType: 'y mandatory', backgroundColor: '#000' }}
+    >
+      {videos.map((item, index) => (
+        // @ts-ignore
+        <div key={item.id} style={{ scrollSnapAlign: 'start', height: '100vh' }}>
+          <FeedItem
+            item={item}
+            isActive={index === currentIndex}
+            muted={muted}
+            onToggleMute={toggleMute}
+            onTapNext={() => goNext(index)}
+            categoryFilter={categoryFilter}
+            onCategoryPress={() => setShowCatPanel(true)}
+          />
+        </div>
+      ))}
+      <CategoryOverlay
+        visible={showCatPanel}
+        selected={categoryFilter}
+        onSelect={setCategoryFilter}
+        onClose={() => setShowCatPanel(false)}
+      />
+    </div>
+  );
+}
+
+// ─── Main screen ─────────────────────────────────────────────────────────────
 export default function FeedScreen() {
   const { videos, currentIndex } = useFeed();
   const setCurrentIndex = useFeedStore((s) => s.setCurrentIndex);
   const [muted, setMuted] = useState(true);
+  const [categoryFilter, setCategoryFilter] = useState('All Categories');
+  const [showCatPanel, setShowCatPanel] = useState(false);
+  const listRef = useRef<FlatList<VideoItem>>(null);
 
-  const toggleMute = () => setMuted((m) => !m);
+  const toggleMute = useCallback(() => setMuted((m) => !m), []);
+
+  const goNext = useCallback((index: number) => {
+    if (index < videos.length - 1) {
+      const next = index + 1;
+      setCurrentIndex(next);
+      listRef.current?.scrollToIndex({ index: next, animated: true });
+    }
+  }, [videos.length, setCurrentIndex]);
 
   if (Platform.OS === 'web') {
     return (
-      // @ts-ignore
-      <div style={{ height: '100vh', overflowY: 'scroll', scrollSnapType: 'y mandatory', backgroundColor: '#000' }}>
-        {videos.map((item, index) => (
-          // @ts-ignore
-          <div key={item.id} style={{ scrollSnapAlign: 'start', height: '100vh' }}>
-            <FeedItem
-              item={item}
-              isActive={index === currentIndex}
-              muted={muted}
-              onToggleMute={toggleMute}
-            />
-          </div>
-        ))}
-      </div>
+      <WebFeed
+        videos={videos}
+        currentIndex={currentIndex}
+        setCurrentIndex={setCurrentIndex}
+        muted={muted}
+        toggleMute={toggleMute}
+        categoryFilter={categoryFilter}
+        setCategoryFilter={setCategoryFilter}
+      />
     );
   }
 
   return (
-    <FlatList
-      data={videos}
-      keyExtractor={(item) => String(item.id)}
-      renderItem={({ item, index }) => (
-        <FeedItem
-          item={item}
-          isActive={index === currentIndex}
-          muted={muted}
-          onToggleMute={toggleMute}
-        />
-      )}
-      pagingEnabled
-      showsVerticalScrollIndicator={false}
-      getItemLayout={(_, index) => ({ length: height, offset: height * index, index })}
-      onMomentumScrollEnd={(e) => {
-        const index = Math.round(e.nativeEvent.contentOffset.y / height);
-        setCurrentIndex(index);
-      }}
-    />
+    <View style={{ flex: 1, backgroundColor: '#000' }}>
+      <FlatList
+        ref={listRef}
+        data={videos}
+        keyExtractor={(item) => String(item.id)}
+        renderItem={({ item, index }) => (
+          <FeedItem
+            item={item}
+            isActive={index === currentIndex}
+            muted={muted}
+            onToggleMute={toggleMute}
+            onTapNext={() => goNext(index)}
+            categoryFilter={categoryFilter}
+            onCategoryPress={() => setShowCatPanel(true)}
+          />
+        )}
+        pagingEnabled
+        showsVerticalScrollIndicator={false}
+        getItemLayout={(_, index) => ({ length: height, offset: height * index, index })}
+        onMomentumScrollEnd={(e) => {
+          const index = Math.round(e.nativeEvent.contentOffset.y / height);
+          setCurrentIndex(index);
+        }}
+      />
+      <CategoryOverlay
+        visible={showCatPanel}
+        selected={categoryFilter}
+        onSelect={setCategoryFilter}
+        onClose={() => setShowCatPanel(false)}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  // Top bar
   topBar: {
     position: 'absolute', left: 0, right: 0,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    paddingHorizontal: 16, zIndex: 10,
+    flexDirection: 'row', alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12, zIndex: 20,
   },
-  backBtn: { position: 'absolute', left: 12, padding: 4 },
-  muteBtn: {
-    position: 'absolute', right: 16,
-    width: 36, height: 36, borderRadius: 18,
+  topLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+  topRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  backBtn: { padding: 6, marginRight: 4 },
+  videographerBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
+  miniAvatar: {
+    width: 34, height: 34, borderRadius: 17,
+    backgroundColor: C.sand, borderWidth: 1.5, borderColor: C.white,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  miniAvatarText: { color: C.charcoal, fontSize: 13, fontFamily: F.bodySemiBold },
+  videographerName: {
+    color: C.white, fontFamily: F.bodySemiBold, fontSize: 13, maxWidth: 130,
+    textShadowColor: 'rgba(0,0,0,0.6)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4,
+  },
+  iconBtn: {
+    width: 34, height: 34, borderRadius: 17,
     backgroundColor: 'rgba(0,0,0,0.35)',
     alignItems: 'center', justifyContent: 'center',
   },
-  toggle: { flexDirection: 'row', gap: 20 },
-  toggleActive: {
-    fontFamily: F.bodySemiBold, fontSize: 15, color: C.white,
-    borderBottomWidth: 2, borderBottomColor: C.white, paddingBottom: 2,
-  },
-  toggleInactive: { fontFamily: F.bodySemiBold, fontSize: 15, color: 'rgba(255,255,255,0.45)' },
-  bottomLeft: { position: 'absolute', left: 16, right: 90 },
-  metaUsername: { fontFamily: F.bodySemiBold, fontSize: 13, color: C.whiteMuted, letterSpacing: 0.5, marginBottom: 6 },
-  metaPlace: { fontFamily: F.display, fontSize: 28, color: C.white, marginBottom: 4, lineHeight: 34 },
-  metaLocation: { fontFamily: F.body, fontSize: 12, color: 'rgba(255,255,255,0.5)', letterSpacing: 2 },
-  rightRail: { position: 'absolute', right: 14, alignItems: 'center', gap: 20, zIndex: 10 },
-  avatarWrap: { position: 'relative', marginBottom: 4 },
-  railAvatar: { width: 46, height: 46, borderRadius: 23, backgroundColor: C.sand, borderWidth: 2, borderColor: C.white },
-  avatarPlus: {
-    position: 'absolute', bottom: -8, left: '50%',
-    width: 18, height: 18, borderRadius: 9,
-    backgroundColor: '#E8735A',
+  discoveryBtn: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: '#4ECDC4',
     alignItems: 'center', justifyContent: 'center',
-    marginLeft: -9,
   },
-  avatarPlusText: { color: C.white, fontSize: 12, fontWeight: '700', lineHeight: 18 },
-  railBtn: { alignItems: 'center', gap: 4 },
-  railCount: { fontFamily: F.bodySemiBold, fontSize: 11, color: C.whiteMuted },
+  // Category chip
+  categoryChip: {
+    position: 'absolute', left: 12, zIndex: 15,
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    paddingHorizontal: 12, paddingVertical: 6,
+    borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)',
+  },
+  categoryChipText: { color: C.white, fontFamily: F.bodySemiBold, fontSize: 12 },
+  // Bottom
+  bottomMeta: { position: 'absolute', left: 16, right: 80 },
+  metaPlace: {
+    fontFamily: F.display, fontSize: 26, color: C.white, marginBottom: 4, lineHeight: 32,
+    textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 6,
+  },
+  metaLocation: {
+    fontFamily: F.body, fontSize: 13, color: 'rgba(255,255,255,0.65)',
+    letterSpacing: 1.5, textTransform: 'uppercase',
+  },
+  shareBtn: {
+    position: 'absolute', right: 16, zIndex: 10,
+    width: 44, height: 44, borderRadius: 22,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  // Right rail
+  rightRail: { position: 'absolute', right: 14, alignItems: 'center', gap: 24, zIndex: 10 },
+  railBtn: { alignItems: 'center', gap: 5 },
+  railCount: { fontFamily: F.bodySemiBold, fontSize: 11, color: 'rgba(255,255,255,0.85)' },
+  // Category panel
+  overlay: { ...StyleSheet.absoluteFillObject, zIndex: 50, justifyContent: 'flex-end' },
+  categoryPanel: {
+    backgroundColor: 'rgba(18,16,14,0.98)',
+    borderTopLeftRadius: 20, borderTopRightRadius: 20,
+    paddingTop: 20, paddingBottom: 48, paddingHorizontal: 24,
+    borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)',
+  },
+  categoryPanelSection: {
+    color: 'rgba(255,255,255,0.35)', fontFamily: F.bodySemiBold,
+    fontSize: 10, letterSpacing: 1.8, textTransform: 'uppercase',
+    marginTop: 16, marginBottom: 10,
+  },
+  categoryRow: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingVertical: 13,
+    borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)',
+  },
+  categoryRowText: { color: C.white, fontFamily: F.body, fontSize: 15 },
 });

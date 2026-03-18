@@ -10,7 +10,9 @@
     "plugins": [
       "expo-router",
       "expo-video",
-      "expo-font"
+      "expo-font",
+      "expo-secure-store",
+      "expo-sharing"
     ],
     "android": {
       "adaptiveIcon": {
