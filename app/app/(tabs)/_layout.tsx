@@ -1,19 +1,33 @@
 import { Tabs } from 'expo-router';
-import { View } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { C } from '../../src/constants/theme';
+import { FiHome, FiCompass, FiBookmark, FiUser } from 'react-icons/fi';
+import { C, F } from '../../src/constants/theme';
 
-function TabIcon({ focused, children }: { focused: boolean; children: React.ReactNode }) {
+const TABS = [
+  { name: 'index',   label: 'Home',    Icon: FiHome },
+  { name: 'explore', label: 'Explore', Icon: FiCompass },
+  { name: 'saved',   label: 'Saved',   Icon: FiBookmark },
+  { name: 'profile', label: 'Profile', Icon: FiUser },
+] as const;
+
+function TabIcon({ Icon, label, focused }: { Icon: React.ElementType; label: string; focused: boolean }) {
   return (
-    <View style={{ alignItems: 'center', gap: 4 }}>
-      <View style={{ opacity: focused ? 1 : 0.35 }}>{children}</View>
-      {focused && <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: C.sand }} />}
+    <View style={styles.iconWrap}>
+      <Icon
+        size={22}
+        color={focused ? C.charcoal : C.sand}
+        style={{ strokeWidth: focused ? 2.5 : 1.5 }}
+      />
+      <Text style={[styles.label, focused && styles.labelActive]}>{label}</Text>
+      {focused && <View style={styles.dot} />}
     </View>
   );
 }
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
+
   return (
     <Tabs
       screenOptions={{
@@ -23,57 +37,30 @@ export default function TabsLayout() {
           backgroundColor: C.cream,
           borderTopWidth: 1,
           borderTopColor: C.border,
-          height: 64 + insets.bottom,
+          height: 68 + insets.bottom,
           paddingBottom: insets.bottom,
+          paddingTop: 4,
         },
       }}
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused}>
-              {/* Home icon — roof + body */}
-              <View style={{ width: 22, height: 22, alignItems: 'center', justifyContent: 'center' }}>
-                <View style={{ position: 'absolute', bottom: 0, width: 18, height: 12, borderWidth: 1.5, borderColor: C.charcoal, borderRadius: 2 }} />
-                <View style={{ position: 'absolute', top: 1, width: 0, height: 0, borderLeftWidth: 11, borderRightWidth: 11, borderBottomWidth: 9, borderLeftColor: 'transparent', borderRightColor: 'transparent', borderBottomColor: C.charcoal }} />
-              </View>
-            </TabIcon>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused}>
-              <View style={{ width: 22, height: 22, borderRadius: 11, borderWidth: 1.5, borderColor: C.charcoal, alignItems: 'center', justifyContent: 'center' }}>
-                <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: C.charcoal }} />
-              </View>
-            </TabIcon>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="saved"
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused}>
-              <View style={{ width: 16, height: 20, borderWidth: 1.5, borderColor: C.charcoal, borderRadius: 2 }} />
-            </TabIcon>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused}>
-              <View style={{ width: 22, height: 22, borderRadius: 11, borderWidth: 1.5, borderColor: C.charcoal }} />
-            </TabIcon>
-          ),
-        }}
-      />
+      {TABS.map(({ name, label, Icon }) => (
+        <Tabs.Screen
+          key={name}
+          name={name}
+          options={{
+            tabBarIcon: ({ focused }) => (
+              <TabIcon Icon={Icon} label={label} focused={focused} />
+            ),
+          }}
+        />
+      ))}
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  iconWrap: { alignItems: 'center', gap: 3, paddingTop: 2 },
+  label: { fontFamily: F.body, fontSize: 10, color: C.sand, letterSpacing: 0.3 },
+  labelActive: { fontFamily: F.bodySemiBold, color: C.charcoal },
+  dot: { width: 3, height: 3, borderRadius: 2, backgroundColor: C.sand, marginTop: 1 },
+});
