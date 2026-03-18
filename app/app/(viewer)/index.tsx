@@ -5,10 +5,7 @@ import {
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import {
-  FiHeart, FiShare2, FiBookmark, FiCompass,
-  FiVolume2, FiVolumeX, FiArrowLeft, FiChevronLeft,
-} from 'react-icons/fi';
+import { Feather } from '@expo/vector-icons';
 import { VideoPlayer } from '../../src/components/VideoPlayer';
 import { useFeed } from '../../src/hooks/useFeed';
 import { useFeedStore } from '../../src/store/feed.store';
@@ -17,20 +14,6 @@ import { VideoItem } from '../../src/types';
 import { C, F } from '../../src/constants/theme';
 
 const { width, height } = Dimensions.get('window');
-
-function RailBtn({
-  onPress, children, style,
-}: {
-  onPress?: () => void;
-  children: React.ReactNode;
-  style?: object;
-}) {
-  return (
-    <TouchableOpacity onPress={onPress} style={[styles.railBtn, style]} activeOpacity={0.7}>
-      {children}
-    </TouchableOpacity>
-  );
-}
 
 function FeedItem({
   item, isActive, muted, onToggleMute,
@@ -47,7 +30,7 @@ function FeedItem({
 
   return (
     <View style={{ width, height }}>
-      {/* Video — handles click-to-pause internally */}
+      {/* Video */}
       <VideoPlayer video={item} isActive={isActive} muted={muted} />
 
       {/* Warm top vignette */}
@@ -66,17 +49,14 @@ function FeedItem({
       {/* Top bar */}
       <View style={[styles.topBar, { top: insets.top + 12 }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
-          <FiChevronLeft color={C.white} size={26} />
+          <Feather name="chevron-left" size={28} color={C.white} />
         </TouchableOpacity>
         <View style={styles.toggle}>
           <Text style={styles.toggleActive}>For You</Text>
           <Text style={styles.toggleInactive}>Following</Text>
         </View>
-        {/* Mute in top-right */}
         <TouchableOpacity onPress={onToggleMute} style={styles.muteBtn} activeOpacity={0.7}>
-          {muted
-            ? <FiVolumeX color={C.white} size={20} />
-            : <FiVolume2 color={C.white} size={20} />}
+          <Feather name={muted ? 'volume-x' : 'volume-2'} size={20} color={C.white} />
         </TouchableOpacity>
       </View>
 
@@ -91,7 +71,7 @@ function FeedItem({
 
       {/* Right rail */}
       <View style={[styles.rightRail, { bottom: insets.bottom + 100 }]}>
-        {/* Avatar with + badge */}
+        {/* Avatar */}
         <TouchableOpacity
           onPress={() => router.push(`/profile/${item.owner.id}`)}
           style={styles.avatarWrap}
@@ -104,36 +84,38 @@ function FeedItem({
         </TouchableOpacity>
 
         {/* Like */}
-        <RailBtn onPress={() => setLiked(!liked)}>
-          <FiHeart
-            color={liked ? '#E8735A' : C.white}
-            size={28}
-            style={{ fill: liked ? '#E8735A' : 'none' }}
-          />
-          <Text style={styles.railCount}>{liked ? '1' : '0'}</Text>
-        </RailBtn>
+        <TouchableOpacity style={styles.railBtn} onPress={() => setLiked(!liked)} activeOpacity={0.7}>
+          <Feather name="heart" size={28} color={liked ? '#E8735A' : C.white} />
+          <Text style={[styles.railCount, liked && { color: '#E8735A' }]}>
+            {liked ? '1' : '0'}
+          </Text>
+        </TouchableOpacity>
 
         {/* Share */}
-        <RailBtn>
-          <FiShare2 color={C.white} size={26} />
+        <TouchableOpacity style={styles.railBtn} activeOpacity={0.7}>
+          <Feather name="share-2" size={26} color={C.white} />
           <Text style={styles.railCount}>Share</Text>
-        </RailBtn>
+        </TouchableOpacity>
 
         {/* Bookmark */}
-        <RailBtn onPress={() => toggleSaved(String(item.id))}>
-          <FiBookmark
-            color={saved ? C.sand : C.white}
-            size={26}
-            style={{ fill: saved ? C.sand : 'none' }}
-          />
+        <TouchableOpacity
+          style={styles.railBtn}
+          onPress={() => toggleSaved(String(item.id))}
+          activeOpacity={0.7}
+        >
+          <Feather name="bookmark" size={26} color={saved ? C.sand : C.white} />
           <Text style={[styles.railCount, saved && { color: C.sand }]}>Save</Text>
-        </RailBtn>
+        </TouchableOpacity>
 
         {/* Explore */}
-        <RailBtn onPress={() => router.push('/(tabs)/explore')}>
-          <FiCompass color={C.white} size={26} />
+        <TouchableOpacity
+          style={styles.railBtn}
+          onPress={() => router.push('/(tabs)/explore')}
+          activeOpacity={0.7}
+        >
+          <Feather name="compass" size={26} color={C.white} />
           <Text style={styles.railCount}>Explore</Text>
-        </RailBtn>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -194,7 +176,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     paddingHorizontal: 16, zIndex: 10,
   },
-  backBtn: { position: 'absolute', left: 16, padding: 4 },
+  backBtn: { position: 'absolute', left: 12, padding: 4 },
   muteBtn: {
     position: 'absolute', right: 16,
     width: 36, height: 36, borderRadius: 18,
@@ -208,18 +190,12 @@ const styles = StyleSheet.create({
   },
   toggleInactive: { fontFamily: F.bodySemiBold, fontSize: 15, color: 'rgba(255,255,255,0.45)' },
   bottomLeft: { position: 'absolute', left: 16, right: 90 },
-  metaUsername: {
-    fontFamily: F.bodySemiBold, fontSize: 13, color: C.whiteMuted,
-    letterSpacing: 0.5, marginBottom: 6,
-  },
+  metaUsername: { fontFamily: F.bodySemiBold, fontSize: 13, color: C.whiteMuted, letterSpacing: 0.5, marginBottom: 6 },
   metaPlace: { fontFamily: F.display, fontSize: 28, color: C.white, marginBottom: 4, lineHeight: 34 },
   metaLocation: { fontFamily: F.body, fontSize: 12, color: 'rgba(255,255,255,0.5)', letterSpacing: 2 },
   rightRail: { position: 'absolute', right: 14, alignItems: 'center', gap: 20, zIndex: 10 },
   avatarWrap: { position: 'relative', marginBottom: 4 },
-  railAvatar: {
-    width: 46, height: 46, borderRadius: 23,
-    backgroundColor: C.sand, borderWidth: 2, borderColor: C.white,
-  },
+  railAvatar: { width: 46, height: 46, borderRadius: 23, backgroundColor: C.sand, borderWidth: 2, borderColor: C.white },
   avatarPlus: {
     position: 'absolute', bottom: -8, left: '50%',
     width: 18, height: 18, borderRadius: 9,

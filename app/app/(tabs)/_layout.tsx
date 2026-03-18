@@ -1,24 +1,22 @@
 import { Tabs } from 'expo-router';
 import { View, Text, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { FiHome, FiCompass, FiBookmark, FiUser } from 'react-icons/fi';
+import { Feather } from '@expo/vector-icons';
 import { C, F } from '../../src/constants/theme';
 
-const TABS = [
-  { name: 'index',   label: 'Home',    Icon: FiHome },
-  { name: 'explore', label: 'Explore', Icon: FiCompass },
-  { name: 'saved',   label: 'Saved',   Icon: FiBookmark },
-  { name: 'profile', label: 'Profile', Icon: FiUser },
-] as const;
+type FeatherName = React.ComponentProps<typeof Feather>['name'];
 
-function TabIcon({ Icon, label, focused }: { Icon: React.ElementType; label: string; focused: boolean }) {
+const TABS: { name: string; label: string; icon: FeatherName }[] = [
+  { name: 'index',   label: 'Home',    icon: 'home' },
+  { name: 'explore', label: 'Explore', icon: 'compass' },
+  { name: 'saved',   label: 'Saved',   icon: 'bookmark' },
+  { name: 'profile', label: 'Profile', icon: 'user' },
+];
+
+function TabIcon({ icon, label, focused }: { icon: FeatherName; label: string; focused: boolean }) {
   return (
     <View style={styles.iconWrap}>
-      <Icon
-        size={22}
-        color={focused ? C.charcoal : C.sand}
-        style={{ strokeWidth: focused ? 2.5 : 1.5 }}
-      />
+      <Feather name={icon} size={22} color={focused ? C.charcoal : C.sand} />
       <Text style={[styles.label, focused && styles.labelActive]}>{label}</Text>
       {focused && <View style={styles.dot} />}
     </View>
@@ -43,13 +41,13 @@ export default function TabsLayout() {
         },
       }}
     >
-      {TABS.map(({ name, label, Icon }) => (
+      {TABS.map(({ name, label, icon }) => (
         <Tabs.Screen
           key={name}
           name={name}
           options={{
             tabBarIcon: ({ focused }) => (
-              <TabIcon Icon={Icon} label={label} focused={focused} />
+              <TabIcon icon={icon} label={label} focused={focused} />
             ),
           }}
         />
