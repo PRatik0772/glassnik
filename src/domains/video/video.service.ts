@@ -23,6 +23,11 @@ export class VideoService {
       },
     });
 
+    await this.prisma.user.update({
+      where: { id: ownerId },
+      data: { hasUploadedContent: true },
+    });
+
     return video;
   }
 

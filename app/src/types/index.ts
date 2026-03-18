@@ -8,6 +8,7 @@ export interface VideoOwner {
 export interface VideoItem {
   id: number;
   muxPlaybackId: string | null;
+  webVideoUrl?: string; // direct MP4 URL for web/mock, overrides muxPlaybackId on web
   thumbnailUrl: string | null;
   place: string | null;
   city: string | null;

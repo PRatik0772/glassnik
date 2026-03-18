@@ -9,6 +9,9 @@ async function bootstrap() {
   // Enable validation for all incoming requests
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
+  // Allow Expo web preview (localhost:8081) to call the API
+  app.enableCors({ origin: true });
+
   // Ensures Prisma shuts down gracefully
   app.enableShutdownHooks();
 

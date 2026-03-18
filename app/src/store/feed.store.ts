@@ -5,6 +5,7 @@ interface FeedState {
   videos: VideoItem[];
   currentIndex: number;
   activeCategory: string | null;
+  activeVideoId: string | null;
   nextCursor: string | null;
   hasMore: boolean;
   isLoading: boolean;
@@ -13,6 +14,7 @@ interface FeedState {
   appendVideos: (videos: VideoItem[], nextCursor: string | null) => void;
   setCurrentIndex: (index: number) => void;
   setCategory: (category: string | null) => void;
+  setActiveVideoId: (id: string) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   reset: () => void;
@@ -22,6 +24,7 @@ export const useFeedStore = create<FeedState>((set) => ({
   videos: [],
   currentIndex: 0,
   activeCategory: null,
+  activeVideoId: null,
   nextCursor: null,
   hasMore: true,
   isLoading: false,
@@ -39,6 +42,7 @@ export const useFeedStore = create<FeedState>((set) => ({
 
   setCurrentIndex: (currentIndex) => set({ currentIndex }),
   setCategory: (activeCategory) => set({ activeCategory }),
+  setActiveVideoId: (id) => set({ activeVideoId: id }),
   setLoading: (isLoading) => set({ isLoading }),
   setError: (error) => set({ error }),
   reset: () => set({ videos: [], currentIndex: 0, nextCursor: null, hasMore: true }),
