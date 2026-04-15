@@ -14,6 +14,9 @@ export const getFeed = async (params: {
   if (USE_MOCK) return MOCK_FEED_RESPONSE;
   try {
     const res = await apiClient.get<FeedResponse>('/mobile/feed', { params });
+    // Only use real data if at least one video is actually playable
+    const playable = res.data.data.filter((v) => v.muxPlaybackId || v.webVideoUrl);
+    if (playable.length === 0) return MOCK_FEED_RESPONSE;
     return res.data;
   } catch {
     // Backend unreachable — serve mock data so the app stays usable

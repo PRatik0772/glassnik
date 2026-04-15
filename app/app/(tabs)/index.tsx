@@ -6,6 +6,7 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useFeedStore } from '../../src/store/feed.store';
+import { useAuthStore } from '../../src/store/auth.store';
 import { FeaturedCard } from '../../src/components/FeaturedCard';
 import { ContentRow } from '../../src/components/ContentRow';
 import { MOCK_VIDEOS } from '../../src/api/mockData';
@@ -25,6 +26,9 @@ function getGreeting() {
 export default function DashboardScreen() {
   const insets = useSafeAreaInsets();
   const setActiveVideoId = useFeedStore((s) => s.setActiveVideoId);
+  const displayName = useAuthStore((s) => s.displayName);
+  const firstName = displayName ? displayName.split(' ')[0] : 'Explorer';
+  const avatarInitial = displayName ? displayName[0].toUpperCase() : 'G';
 
   const openVideo = (video: VideoItem) => {
     setActiveVideoId(String(video.id));
@@ -59,7 +63,7 @@ export default function DashboardScreen() {
             style={styles.avatar}
             activeOpacity={0.8}
           >
-            <Text style={styles.avatarInitial}>E</Text>
+            <Text style={styles.avatarInitial}>{avatarInitial}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -69,7 +73,7 @@ export default function DashboardScreen() {
         <View style={styles.greetingRow}>
           <View>
             <Text style={styles.greeting}>{getGreeting()},</Text>
-            <Text style={styles.greetingName}>Explorer</Text>
+            <Text style={styles.greetingName}>{firstName}</Text>
           </View>
           <TouchableOpacity
             style={styles.watchBtn}
