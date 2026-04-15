@@ -13,14 +13,19 @@ const { width } = Dimensions.get('window');
 const GRID_GAP = 2;
 const THUMB = (width - GRID_GAP * 2) / 3;
 
-// My profile is user id=1 in mock data
-const MY_PROFILE = MOCK_PROFILES[1];
-const MY_VIDEOS = MOCK_VIDEOS.filter((v) => v.owner.id === 1);
-
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const clearTokens = useAuthStore((s) => s.clearTokens);
+  const authDisplayName = useAuthStore((s) => s.displayName);
+  const authUsername = useAuthStore((s) => s.username);
+  const userId = useAuthStore((s) => s.userId);
   const setActiveVideoId = useFeedStore((s) => s.setActiveVideoId);
+
+  // Use real auth data if available, fall back to mock profile
+  const fallback = MOCK_PROFILES[1];
+  const displayName = authDisplayName ?? fallback.displayName;
+  const username = authUsername ?? fallback.username;
+  const MY_VIDEOS = userId ? MOCK_VIDEOS.filter((v) => v.owner.id === userId) : [];
 
   const signOut = async () => {
     await clearTokens();
@@ -33,8 +38,8 @@ export default function ProfileScreen() {
   };
 
   const STATS = [
-    { val: String(MY_PROFILE.videoCount), label: 'Videos' },
-    { val: MY_PROFILE.followerCount.toLocaleString(), label: 'Followers' },
+    { val: String(MY_VIDEOS.length || fallback.videoCount), label: 'Videos' },
+    { val: fallback.followerCount.toLocaleString(), label: 'Followers' },
     { val: '312', label: 'Following' },
   ];
 
@@ -63,12 +68,12 @@ export default function ProfileScreen() {
           <View style={styles.avatarRing}>
             <View style={styles.avatarInner}>
               <Text style={styles.avatarInitial}>
-                {(MY_PROFILE.displayName)[0].toUpperCase()}
+                {displayName[0].toUpperCase()}
               </Text>
             </View>
           </View>
-          <Text style={styles.displayName}>{MY_PROFILE.displayName}</Text>
-          <Text style={styles.handle}>@{MY_PROFILE.username}</Text>
+          <Text style={styles.displayName}>{displayName}</Text>
+          <Text style={styles.handle}>@{username}</Text>
 
           {/* Stats */}
           <View style={styles.statsRow}>

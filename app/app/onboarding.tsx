@@ -1,12 +1,13 @@
 import { useRef, useState } from 'react';
 import {
   View, ScrollView, Text, TouchableOpacity, Dimensions,
-  StyleSheet, Platform, ActivityIndicator,
+  StyleSheet, Platform, ActivityIndicator, Alert,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuthStore } from '../src/store/auth.store';
+import { authApi } from '../src/api/auth';
 import { FloatLabelInput } from '../src/components/FloatLabelInput';
 import { C, F } from '../src/constants/theme';
 
@@ -20,15 +21,41 @@ export default function OnboardingScreen() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
-  const setTokens = useAuthStore((s) => s.setTokens);
+  const [error, setError] = useState('');
+  const setSession = useAuthStore((s) => s.setSession);
 
-  const goToLogin = () => scrollRef.current?.scrollTo({ y: height, animated: true });
+  const goToLogin = () => {
+    setError('');
+    scrollRef.current?.scrollTo({ y: height, animated: true });
+  };
 
   const handleContinue = async () => {
+    if (!email.trim()) return setError('Please enter your email.');
+    if (password.length < 6) return setError('Password must be at least 6 characters.');
+    setError('');
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 800));
-    await setTokens('mock-token', 1);
-    router.replace('/(tabs)');
+    try {
+      const res = tab === 'signin'
+        ? await authApi.login({ email: email.trim(), password })
+        : await authApi.register({
+            email: email.trim(),
+            password,
+            displayName: name.trim() || undefined,
+          });
+      await setSession({
+        accessToken: res.accessToken,
+        refreshToken: res.refreshToken,
+        userId: res.user.id,
+        displayName: res.user.displayName,
+        username: res.user.username,
+      });
+      router.replace('/(tabs)');
+    } catch (e: any) {
+      const msg = e?.response?.data?.message;
+      setError(Array.isArray(msg) ? msg[0] : msg ?? 'Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -101,11 +128,16 @@ export default function OnboardingScreen() {
           <FloatLabelInput label="Password" value={password} onChangeText={setPassword} secureTextEntry />
         </View>
 
+        {/* Error message */}
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
         {/* CTA */}
         <TouchableOpacity style={styles.continueBtn} onPress={handleContinue} disabled={loading}>
           {loading
             ? <ActivityIndicator color={C.cream} />
-            : <Text style={styles.continueText}>Continue</Text>}
+            : <Text style={styles.continueText}>
+                {tab === 'signin' ? 'Sign In' : 'Create Account'}
+              </Text>}
         </TouchableOpacity>
 
         {/* Divider */}
@@ -149,6 +181,7 @@ const styles = StyleSheet.create({
   tabText: { fontFamily: F.bodySemiBold, fontSize: 14, color: C.muted },
   tabTextActive: { color: C.charcoal },
   tabUnderline: { height: 2, backgroundColor: C.sand, borderRadius: 1, marginTop: 4 },
+  errorText: { fontFamily: F.body, fontSize: 13, color: '#E8735A', marginTop: 8, marginBottom: 2 },
   continueBtn: { height: 52, backgroundColor: C.charcoal, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginTop: 8 },
   continueText: { fontFamily: F.bodySemiBold, fontSize: 15, color: C.cream },
   dividerRow: { flexDirection: 'row', alignItems: 'center', marginTop: 20, gap: 8 },
