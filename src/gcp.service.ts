@@ -20,4 +20,26 @@ export class GcpService {
 
     return `https://storage.googleapis.com/${this.bucketName}/${filename}`;
   }
+
+  async getSignedUploadUrl(
+    gcsPath: string,
+    mimeType: string,
+    expiresInMinutes = 15,
+  ): Promise<string> {
+    const bucket = this.storage.bucket(this.bucketName);
+    const file = bucket.file(gcsPath);
+
+    const [url] = await file.getSignedUrl({
+      version: 'v4',
+      action: 'write',
+      expires: Date.now() + expiresInMinutes * 60 * 1000,
+      contentType: mimeType,
+    });
+
+    return url;
+  }
+
+  getPublicUrl(gcsPath: string): string {
+    return `https://storage.googleapis.com/${this.bucketName}/${gcsPath}`;
+  }
 }

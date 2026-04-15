@@ -1,59 +1,50 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Get,
-  Headers,
   Param,
   ParseIntPipe,
   Patch,
   Post,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateMeDto } from './dto/update-me.dto';
+import { JwtAuthGuard } from '@/auth/guards/jwt-auth.guard';
 
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  // POST /users — public registration (delegates to auth normally, kept for legacy tests)
   @Post()
   createUser(@Body() dto: CreateUserDto) {
     return this.userService.createUser(dto);
   }
 
   @Get('me')
-  getMe(@Headers('x-user-id') userIdHeader?: string) {
-    const userId = this.parseUserId(userIdHeader);
-    return this.userService.getMe(userId);
+  @UseGuards(JwtAuthGuard)
+  getMe(@Req() req) {
+    return this.userService.getMe(req.user.id);
   }
 
   @Patch('me')
-  updateMe(@Headers('x-user-id') userIdHeader: string | undefined, @Body() dto: UpdateMeDto) {
-    const userId = this.parseUserId(userIdHeader);
-    return this.userService.updateMe(userId, dto);
+  @UseGuards(JwtAuthGuard)
+  updateMe(@Req() req, @Body() dto: UpdateMeDto) {
+    return this.userService.updateMe(req.user.id, dto);
   }
 
+  // Public profile — no auth required
   @Get(':id')
   getPublicProfile(@Param('id', ParseIntPipe) id: number) {
     return this.userService.getPublicProfile(id);
   }
 
+  // Public capability list for a user — no auth required
   @Get(':userId/capabilities')
   getUserCapabilities(@Param('userId', ParseIntPipe) userId: number) {
     return this.userService.listUserCapabilities(userId);
-  }
-
-  private parseUserId(userIdHeader?: string) {
-    if (!userIdHeader) {
-      throw new BadRequestException('Missing x-user-id header');
-    }
-
-    const userId = Number(userIdHeader);
-    if (!Number.isInteger(userId) || userId <= 0) {
-      throw new BadRequestException('Invalid x-user-id header');
-    }
-
-    return userId;
   }
 }

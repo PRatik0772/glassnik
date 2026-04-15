@@ -1,23 +1,23 @@
-import { Body, Controller, ForbiddenException, Get, Headers, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { CapabilitiesService } from './capabilities.service';
 import { CreateCapabilityDto } from './dto/create-capability.dto';
+import { JwtAuthGuard } from '@/auth/guards/jwt-auth.guard';
+import { AdminGuard } from '@/auth/guards/admin.guard';
 
 @Controller('capabilities')
 export class CapabilitiesController {
   constructor(private readonly capabilitiesService: CapabilitiesService) {}
 
+  // Public: list all capabilities
   @Get()
   listAll() {
     return this.capabilitiesService.listAll();
   }
 
+  // Admin only: create a new capability definition
   @Post()
-  createCapability(@Headers('x-admin') adminHeader: string | undefined, @Body() dto: CreateCapabilityDto) {
-    const isAdmin = adminHeader === 'true' || adminHeader === '1';
-    if (!isAdmin) {
-      throw new ForbiddenException('Admin access required');
-    }
-
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  createCapability(@Body() dto: CreateCapabilityDto) {
     return this.capabilitiesService.createCapability(dto);
   }
 }

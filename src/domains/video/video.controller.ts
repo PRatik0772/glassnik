@@ -15,6 +15,7 @@ import {
 import { VideoService } from './video.service';
 import { CreateVideoDto } from './dto/create-video.dto';
 import { UpdateVideoDto } from './dto/update-video.dto';
+import { UploadVideoDto } from './dto/upload-video.dto';
 import { JwtAuthGuard } from '@/auth/guards/jwt-auth.guard';
 
 @Controller('videos')
@@ -25,6 +26,18 @@ export class VideoController {
   @Post()
   create(@Req() req, @Body() dto: CreateVideoDto) {
     return this.videoService.create(req.user.id, dto);
+  }
+
+  // POST /videos/upload — returns a signed GCS URL + video record id
+  @Post('upload')
+  requestUpload(@Req() req, @Body() dto: UploadVideoDto) {
+    return this.videoService.requestUpload(req.user.id, dto);
+  }
+
+  // PATCH /videos/:id/confirm — owner calls this after upload completes
+  @Patch(':id/confirm')
+  confirmUpload(@Param('id', ParseIntPipe) id: number, @Req() req) {
+    return this.videoService.confirmUpload(id, req.user.id);
   }
 
   @Get()

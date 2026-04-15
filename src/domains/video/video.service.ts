@@ -7,6 +7,7 @@ import { PrismaService } from '@/prisma/prisma.service';
 import { GcpService } from '@/gcp.service';
 import { CreateVideoDto } from './dto/create-video.dto';
 import { UpdateVideoDto } from './dto/update-video.dto';
+import { UploadVideoDto } from './dto/upload-video.dto';
 
 @Injectable()
 export class VideoService {
@@ -92,5 +93,47 @@ export class VideoService {
     }
 
     await this.prisma.videoAsset.delete({ where: { id } });
+  }
+
+  // Step 1: create the video record + return a signed GCS upload URL
+  async requestUpload(ownerId: number, dto: UploadVideoDto) {
+    const gcsPath = `uploads/${ownerId}/${Date.now()}.${dto.mimeType.split('/')[1]}`;
+
+    const video = await this.prisma.videoAsset.create({
+      data: {
+        ownerId,
+        title: dto.title,
+        description: dto.description,
+        mimeType: dto.mimeType,
+        sizeBytes: dto.sizeBytes,
+        gcsPath,
+        source: 'mobile',
+        status: 'UPLOADING',
+      },
+    });
+
+    const uploadUrl = await this.gcpService.getSignedUploadUrl(gcsPath, dto.mimeType);
+
+    return { videoId: video.id, uploadUrl, expiresInMinutes: 15 };
+  }
+
+  // Step 2: owner calls this after the client finishes uploading to GCS
+  async confirmUpload(id: number, ownerId: number) {
+    const video = await this.prisma.videoAsset.findFirst({
+      where: { id, ownerId },
+    });
+
+    if (!video) {
+      throw new NotFoundException(`Video #${id} not found or access denied`);
+    }
+
+    return this.prisma.videoAsset.update({
+      where: { id },
+      data: {
+        status: 'UPLOADED',
+        publicUrl: this.gcpService.getPublicUrl(video.gcsPath!),
+        // moderationStatus stays PENDING — moderation pipeline picks it up from here
+      },
+    });
   }
 }
