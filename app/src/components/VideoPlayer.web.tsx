@@ -15,7 +15,7 @@ export function VideoPlayer({ video, isActive, muted }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [paused, setPaused] = useState(false);
   const [showFlash, setShowFlash] = useState(false);
-  const flashTimeout = useRef<ReturnType<typeof setTimeout>>();
+  const flashTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const videoSrc = video.webVideoUrl
     ?? (video.muxPlaybackId ? `https://stream.mux.com/${video.muxPlaybackId}.m3u8` : null);
