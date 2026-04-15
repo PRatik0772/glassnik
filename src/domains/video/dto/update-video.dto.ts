@@ -1,5 +1,7 @@
 import { IsBoolean, IsOptional, IsString, Length } from 'class-validator';
 
+// status and moderationStatus are intentionally excluded — only the moderation
+// system can transition those fields, never the owner directly.
 export class UpdateVideoDto {
   @IsOptional()
   @IsString()
@@ -9,10 +11,6 @@ export class UpdateVideoDto {
   @IsOptional()
   @IsString()
   description?: string;
-
-  @IsOptional()
-  @IsString()
-  status?: string;
 
   @IsOptional()
   @IsBoolean()

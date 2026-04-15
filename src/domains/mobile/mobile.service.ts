@@ -22,7 +22,10 @@ export class MobileService {
       throw new BadRequestException('Invalid cursor');
     }
 
-    const where: Prisma.VideoAssetWhereInput = { status: 'READY' };
+    const where: Prisma.VideoAssetWhereInput = {
+      status: 'READY',
+      moderationStatus: 'APPROVED',
+    };
     if (query.category) where.category = query.category;
 
     const orderBy = query.trending
@@ -64,6 +67,7 @@ export class MobileService {
       take: 50,
       where: {
         status: 'READY',
+        moderationStatus: 'APPROVED',
         OR: [
           { place: { contains: term, mode: 'insensitive' } },
           { city: { contains: term, mode: 'insensitive' } },

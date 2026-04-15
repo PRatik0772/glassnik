@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import { GcpService } from '@/gcp.service';
 import { CreateVideoDto } from './dto/create-video.dto';
@@ -20,6 +24,7 @@ export class VideoService {
         source: dto.source || 'mobile',
         eligibleForStitch: dto.eligibleForStitch ?? false,
         status: 'UPLOADED',
+        // moderationStatus defaults to PENDING via schema
       },
     });
 
@@ -38,7 +43,7 @@ export class VideoService {
     });
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, requesterId: number) {
     const video = await this.prisma.videoAsset.findUnique({
       where: { id },
       include: {
@@ -48,8 +53,10 @@ export class VideoService {
       },
     });
 
-    if (!video) {
-      throw new NotFoundException(`Video #${id} not found`);
+    if (!video) throw new NotFoundException(`Video #${id} not found`);
+
+    if (video.ownerId !== requesterId) {
+      throw new ForbiddenException('You do not have access to this video');
     }
 
     return video;
@@ -64,14 +71,26 @@ export class VideoService {
       throw new NotFoundException(`Video #${id} not found or access denied`);
     }
 
+    // status and moderationStatus are not patchable by the owner — enforced via DTO
     return this.prisma.videoAsset.update({
       where: { id },
       data: {
         title: dto.title,
         description: dto.description,
-        status: dto.status,
         eligibleForStitch: dto.eligibleForStitch,
       },
     });
+  }
+
+  async remove(id: number, ownerId: number) {
+    const video = await this.prisma.videoAsset.findFirst({
+      where: { id, ownerId },
+    });
+
+    if (!video) {
+      throw new NotFoundException(`Video #${id} not found or access denied`);
+    }
+
+    await this.prisma.videoAsset.delete({ where: { id } });
   }
 }

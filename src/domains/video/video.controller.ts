@@ -1,7 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   ParseIntPipe,
   Patch,
@@ -29,9 +32,10 @@ export class VideoController {
     return this.videoService.findAllByOwner(req.user.id);
   }
 
+  // Ownership enforced: only owner can fetch their own video details
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.videoService.findOne(id);
+  findOne(@Param('id', ParseIntPipe) id: number, @Req() req) {
+    return this.videoService.findOne(id, req.user.id);
   }
 
   @Patch(':id')
@@ -41,5 +45,11 @@ export class VideoController {
     @Body() dto: UpdateVideoDto,
   ) {
     return this.videoService.update(id, req.user.id, dto);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(@Param('id', ParseIntPipe) id: number, @Req() req) {
+    return this.videoService.remove(id, req.user.id);
   }
 }
