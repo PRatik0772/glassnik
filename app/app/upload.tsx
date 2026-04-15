@@ -129,7 +129,8 @@ export default function UploadScreen() {
 
       {/* Progress bar */}
       <View style={styles.progressBar}>
-        <View style={[styles.progressFill, { width: `${progress}%` as any }]} />
+        <View style={[styles.progressFill, { flex: progress }]} />
+        <View style={{ flex: 100 - progress }} />
       </View>
       <Text style={styles.progressLabel}>Step {step} of 3</Text>
 
@@ -156,7 +157,7 @@ export default function UploadScreen() {
               <Text style={[styles.videoPickerText, !!videoUri && { color: '#ffffff' }]}>
                 {!!videoUri ? 'Video selected — tap to change' : 'Tap to select video'}
               </Text>
-              {!!!videoUri && (
+              {!videoUri && (
                 <Text style={styles.videoPickerHint}>MP4, MOV · Max 3 minutes</Text>
               )}
             </TouchableOpacity>
@@ -298,9 +299,9 @@ export default function UploadScreen() {
         )}
         {step < 3 ? (
           <TouchableOpacity
-            style={[styles.primaryBtn, { flex: step > 1 ? 1 : undefined }]}
+            style={step > 1 ? [styles.primaryBtn, { flex: 1 }] : styles.primaryBtn}
             onPress={() => {
-              if (step === 1 && !!!videoUri) {
+              if (step === 1 && !videoUri) {
                 return Alert.alert('No video', 'Please select a video first.');
               }
               setStep((s) => (s + 1) as any);
@@ -350,6 +351,7 @@ const styles = StyleSheet.create({
   progressBar: {
     height: 3, backgroundColor: 'rgba(255,255,255,0.1)',
     marginHorizontal: 20, borderRadius: 2,
+    flexDirection: 'row',
   },
   progressFill: { height: '100%', backgroundColor: '#ffffff', borderRadius: 2 },
   progressLabel: {
