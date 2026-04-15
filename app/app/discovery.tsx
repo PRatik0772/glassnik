@@ -170,7 +170,7 @@ function NearbyTab() {
   if (locStatus === 'loading') {
     return (
       <View style={styles.nearbyPermission}>
-        <ActivityIndicator color="#4ECDC4" />
+        <ActivityIndicator color="#ffffff" />
         <Text style={styles.nearbyPermissionText}>Getting your location…</Text>
       </View>
     );
@@ -195,7 +195,7 @@ function NearbyTab() {
     <ScrollView contentContainerStyle={{ padding: 20 }}>
       {/* Location header */}
       <View style={styles.nearbyHeader}>
-        <Feather name="map-pin" size={16} color="#4ECDC4" />
+        <Feather name="map-pin" size={16} color="#ffffff" />
         <Text style={styles.nearbyLocation}>
           {coords ? `${coords.lat.toFixed(2)}°, ${coords.lng.toFixed(2)}°` : 'Your Location'}
         </Text>
@@ -204,7 +204,7 @@ function NearbyTab() {
           onPress={requestLocation}
           activeOpacity={0.8}
         >
-          <Feather name="refresh-cw" size={13} color="#4ECDC4" />
+          <Feather name="refresh-cw" size={13} color="#ffffff" />
         </TouchableOpacity>
       </View>
 
@@ -254,7 +254,7 @@ function GlobalTab() {
               activeOpacity={0.8}
               onPress={() => router.push('/(viewer)' as any)}
             >
-              <Feather name="map-pin" size={20} color="#4ECDC4" />
+              <Feather name="map-pin" size={20} color="#ffffff" />
               <Text style={styles.mapPinLabel}>{pin.label}</Text>
             </TouchableOpacity>
           ))}
@@ -416,7 +416,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 20, paddingVertical: 14,
   },
-  headerTitle: { fontFamily: F.display, fontSize: 26, color: C.white },
+  headerTitle: { fontFamily: F.display, fontSize: 30, color: C.white },
   closeBtn: {
     width: 36, height: 36, borderRadius: 18,
     backgroundColor: 'rgba(255,255,255,0.1)',
@@ -435,7 +435,7 @@ const styles = StyleSheet.create({
     borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.07)',
     alignSelf: 'center', height: 34, justifyContent: 'center',
   },
-  tabActive: { backgroundColor: '#4ECDC4' },
+  tabActive: { backgroundColor: '#ffffff' },
   tabText: { fontFamily: F.bodySemiBold, fontSize: 13, color: 'rgba(255,255,255,0.55)' },
   tabTextActive: { color: '#111' },
 
@@ -465,7 +465,7 @@ const styles = StyleSheet.create({
     position: 'absolute', bottom: 0, left: 0, right: 0,
     padding: 10, backgroundColor: 'rgba(0,0,0,0.6)',
   },
-  thumbCategory: { color: '#4ECDC4', fontSize: 9, fontFamily: F.bodySemiBold, letterSpacing: 0.5 },
+  thumbCategory: { color: 'rgba(255,255,255,0.55)', fontSize: 9, fontFamily: F.bodySemiBold, letterSpacing: 0.5 },
   thumbPlace: { color: C.white, fontSize: 13, fontFamily: F.bodySemiBold, marginTop: 2 },
   thumbLocation: { color: 'rgba(255,255,255,0.5)', fontSize: 10, fontFamily: F.body, marginTop: 1 },
 
@@ -484,10 +484,10 @@ const styles = StyleSheet.create({
   vgHandle: { fontFamily: F.body, fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 2 },
   vgStats: { fontFamily: F.body, fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 3 },
   followBtn: {
-    borderWidth: 1, borderColor: '#4ECDC4',
+    borderWidth: 1, borderColor: '#ffffff',
     borderRadius: 20, paddingHorizontal: 16, paddingVertical: 7,
   },
-  followBtnText: { color: '#4ECDC4', fontFamily: F.bodySemiBold, fontSize: 12 },
+  followBtnText: { color: '#ffffff', fontFamily: F.bodySemiBold, fontSize: 12 },
   separator: { height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginHorizontal: 20 },
 
   // Trending
@@ -495,7 +495,7 @@ const styles = StyleSheet.create({
   trendRank: { fontFamily: F.display, fontSize: 20, color: 'rgba(255,255,255,0.2)', width: 32 },
   trendThumb: { width: 90, height: 60, borderRadius: 8, marginRight: 12 },
   trendInfo: { flex: 1 },
-  trendCategory: { color: '#4ECDC4', fontSize: 10, fontFamily: F.bodySemiBold, letterSpacing: 0.5 },
+  trendCategory: { color: 'rgba(255,255,255,0.55)', fontSize: 10, fontFamily: F.bodySemiBold, letterSpacing: 0.5 },
   trendPlace: { color: C.white, fontSize: 14, fontFamily: F.bodySemiBold, marginTop: 3 },
   trendLocation: { color: 'rgba(255,255,255,0.4)', fontSize: 11, fontFamily: F.body, marginTop: 2 },
   trendStats: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 5 },
@@ -510,14 +510,14 @@ const styles = StyleSheet.create({
   nearbyPermissionText: { fontFamily: F.body, fontSize: 14, color: 'rgba(255,255,255,0.45)', textAlign: 'center', lineHeight: 21 },
   nearbyRetryBtn: {
     marginTop: 8, paddingHorizontal: 28, paddingVertical: 12,
-    backgroundColor: '#4ECDC4', borderRadius: 24,
+    backgroundColor: '#ffffff', borderRadius: 24,
   },
   nearbyRetryText: { fontFamily: F.bodySemiBold, fontSize: 13, color: '#111' },
   nearbyHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
   nearbyLocation: { flex: 1, color: C.white, fontFamily: F.bodySemiBold, fontSize: 13 },
   nearbyRefreshBtn: {
     width: 30, height: 30, borderRadius: 15,
-    backgroundColor: 'rgba(78,205,196,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.08)',
     alignItems: 'center', justifyContent: 'center',
   },
   nearbyCard: { marginBottom: 16, borderRadius: 12, overflow: 'hidden', backgroundColor: '#1a1a1a' },
@@ -529,7 +529,7 @@ const styles = StyleSheet.create({
   },
   nearbyViewsText: { color: 'rgba(255,255,255,0.8)', fontSize: 10, fontFamily: F.bodySemiBold },
   nearbyMeta: { padding: 12 },
-  nearbyCategory: { color: '#4ECDC4', fontSize: 10, fontFamily: F.bodySemiBold, letterSpacing: 0.5 },
+  nearbyCategory: { color: 'rgba(255,255,255,0.55)', fontSize: 10, fontFamily: F.bodySemiBold, letterSpacing: 0.5 },
   nearbyPlace: { color: C.white, fontSize: 15, fontFamily: F.bodySemiBold, marginTop: 3 },
   nearbyCity: { color: 'rgba(255,255,255,0.4)', fontSize: 11, fontFamily: F.body, marginTop: 2 },
 
@@ -547,12 +547,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 16, overflow: 'hidden',
   },
   globalCardThumb: { width: 110, height: 100 },
-  globalCardCategory: { color: '#4ECDC4', fontSize: 9, fontFamily: F.bodySemiBold, letterSpacing: 0.5 },
+  globalCardCategory: { color: 'rgba(255,255,255,0.55)', fontSize: 9, fontFamily: F.bodySemiBold, letterSpacing: 0.5 },
   globalCardPlace: { color: C.white, fontSize: 14, fontFamily: F.bodySemiBold, marginTop: 4 },
   globalCardCity: { color: 'rgba(255,255,255,0.4)', fontSize: 11, fontFamily: F.body, marginTop: 2 },
   globalBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
-    backgroundColor: '#4ECDC4', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6,
+    backgroundColor: '#ffffff', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6,
   },
   globalBtnText: { color: '#111', fontFamily: F.bodySemiBold, fontSize: 11 },
 

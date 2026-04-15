@@ -95,10 +95,10 @@ const styles = StyleSheet.create({
   dot: { width: 3, height: 3, borderRadius: 2, backgroundColor: C.sand, marginTop: 1 },
   uploadBtn: {
     width: 48, height: 48, borderRadius: 24,
-    backgroundColor: '#4ECDC4',
+    backgroundColor: '#ffffff',
     alignItems: 'center', justifyContent: 'center',
     marginBottom: 8,
-    shadowColor: '#4ECDC4', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 8,
+    shadowColor: '#ffffff', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8,
     elevation: 6,
   },
   uploadTabBtn: { flex: 1, alignItems: 'center', justifyContent: 'center' },

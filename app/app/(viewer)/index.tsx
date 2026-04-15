@@ -46,10 +46,10 @@ function CategoryOverlay({
             <Feather
               name={selected === cat ? 'check-circle' : 'circle'}
               size={16}
-              color={selected === cat ? '#4ECDC4' : 'rgba(255,255,255,0.4)'}
+              color={selected === cat ? '#ffffff' : 'rgba(255,255,255,0.4)'}
               style={{ marginRight: 12 }}
             />
-            <Text style={[styles.categoryRowText, selected === cat && { color: '#4ECDC4' }]}>
+            <Text style={[styles.categoryRowText, selected === cat && { color: '#ffffff' }]}>
               {cat}
             </Text>
           </TouchableOpacity>
@@ -358,7 +358,8 @@ const styles = StyleSheet.create({
   },
   discoveryBtn: {
     width: 36, height: 36, borderRadius: 18,
-    backgroundColor: '#4ECDC4',
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)',
     alignItems: 'center', justifyContent: 'center',
   },
   // Category chip

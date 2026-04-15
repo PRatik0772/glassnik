@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
     position: 'absolute', bottom: 0, left: 0, right: 0,
     height: '55%', justifyContent: 'flex-end', padding: 10,
   },
-  cardCategory: { color: '#4ECDC4', fontFamily: F.bodySemiBold, fontSize: 9, letterSpacing: 0.8, marginBottom: 3 },
+  cardCategory: { color: 'rgba(255,255,255,0.55)', fontFamily: F.bodySemiBold, fontSize: 9, letterSpacing: 0.8, marginBottom: 3 },
   cardPlace: { fontFamily: F.display, fontSize: 15, color: C.white, marginBottom: 2 },
   cardLocation: { fontFamily: F.body, fontSize: 10, color: 'rgba(255,255,255,0.5)', letterSpacing: 0.8 },
   cardViews: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 5 },

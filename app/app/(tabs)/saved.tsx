@@ -28,7 +28,7 @@ function SavedCard({ video, onPress, onRemove }: { video: VideoItem; onPress: ()
       />
       {/* Remove bookmark */}
       <TouchableOpacity style={styles.removeBtn} onPress={onRemove} activeOpacity={0.8} hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}>
-        <Feather name="bookmark" size={16} color="#4ECDC4" />
+        <Feather name="bookmark" size={16} color="rgba(255,255,255,0.7)" />
       </TouchableOpacity>
       <LinearGradient
         colors={['transparent', 'rgba(18,18,16,0.82)']}
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
     position: 'absolute', bottom: 0, left: 0, right: 0,
     height: '55%', justifyContent: 'flex-end', padding: 10,
   },
-  cardCategory: { color: '#4ECDC4', fontFamily: F.bodySemiBold, fontSize: 9, letterSpacing: 0.8, marginBottom: 3 },
+  cardCategory: { color: 'rgba(255,255,255,0.55)', fontFamily: F.bodySemiBold, fontSize: 9, letterSpacing: 0.8, marginBottom: 3 },
   cardPlace: { fontFamily: F.display, fontSize: 15, color: C.white, marginBottom: 2 },
   cardLocation: { fontFamily: F.body, fontSize: 10, color: 'rgba(255,255,255,0.5)', letterSpacing: 0.8 },
 

@@ -54,7 +54,7 @@ export default function VideographerProfile() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color="#4ECDC4" size="large" />
+        <ActivityIndicator color="#ffffff" size="large" />
       </View>
     );
   }
@@ -97,7 +97,7 @@ export default function VideographerProfile() {
 
         {/* Avatar */}
         <View style={styles.avatarSection}>
-          <View style={[styles.avatarRing, { borderColor: bgColor }]}>
+          <View style={[styles.avatarRing, { borderColor: '#ffffff' }]}>
             <View style={[styles.avatarInner, { backgroundColor: bgColor }]}>
               <Text style={styles.avatarInitial}>{initial}</Text>
             </View>
@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)',
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
   },
-  followBtnActive: { backgroundColor: '#4ECDC4', borderColor: '#4ECDC4' },
+  followBtnActive: { backgroundColor: '#ffffff', borderColor: '#ffffff' },
   followBtnText: { fontFamily: F.bodySemiBold, fontSize: 13, color: C.white },
   msgBtn: {
     flex: 1, height: 42, borderRadius: 21,

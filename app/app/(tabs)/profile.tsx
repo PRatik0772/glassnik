@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
   avatarSection: { alignItems: 'center' },
   avatarRing: {
     width: 88, height: 88, borderRadius: 44,
-    borderWidth: 2.5, borderColor: '#4ECDC4',
+    borderWidth: 2.5, borderColor: '#ffffff',
     padding: 3, marginBottom: 12,
   },
   avatarInner: {
@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
   editBtnText: { fontFamily: F.bodySemiBold, fontSize: 13, color: C.white },
   uploadBtn: {
     flex: 1, height: 40, borderRadius: 20,
-    backgroundColor: '#4ECDC4',
+    backgroundColor: '#ffffff',
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
   },
   uploadBtnText: { fontFamily: F.bodySemiBold, fontSize: 13, color: '#111' },

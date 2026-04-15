@@ -123,9 +123,9 @@ export default function UploadScreen() {
               <Feather
                 name={videoSelected ? 'check-circle' : 'video'}
                 size={40}
-                color={videoSelected ? '#4ECDC4' : 'rgba(255,255,255,0.3)'}
+                color={videoSelected ? '#ffffff' : 'rgba(255,255,255,0.3)'}
               />
-              <Text style={[styles.videoPickerText, videoSelected && { color: '#4ECDC4' }]}>
+              <Text style={[styles.videoPickerText, videoSelected && { color: '#ffffff' }]}>
                 {videoSelected ? 'Video selected — tap to change' : 'Tap to select video'}
               </Text>
               {!videoSelected && (
@@ -135,7 +135,7 @@ export default function UploadScreen() {
 
             {videoSelected && (
               <View style={styles.aiNotice}>
-                <Feather name="cpu" size={16} color="#4ECDC4" />
+                <Feather name="cpu" size={16} color="#ffffff" />
                 <Text style={styles.aiNoticeText}>
                   Our AI will automatically edit your video — removing dead scenes, stabilising footage, and adding location slates. You don't need to edit anything.
                 </Text>
@@ -170,8 +170,8 @@ export default function UploadScreen() {
                     onPress={() => { setCategory(c); setShowCategoryPicker(false); }}
                     activeOpacity={0.7}
                   >
-                    <Text style={[styles.pickerItemText, category === c && { color: '#4ECDC4' }]}>{c}</Text>
-                    {category === c && <Feather name="check" size={14} color="#4ECDC4" />}
+                    <Text style={[styles.pickerItemText, category === c && { color: '#ffffff' }]}>{c}</Text>
+                    {category === c && <Feather name="check" size={14} color="#ffffff" />}
                   </TouchableOpacity>
                 ))}
               </View>
@@ -197,8 +197,8 @@ export default function UploadScreen() {
                     onPress={() => { setActivity(a); setShowActivityPicker(false); }}
                     activeOpacity={0.7}
                   >
-                    <Text style={[styles.pickerItemText, activity === a && { color: '#4ECDC4' }]}>{a}</Text>
-                    {activity === a && <Feather name="check" size={14} color="#4ECDC4" />}
+                    <Text style={[styles.pickerItemText, activity === a && { color: '#ffffff' }]}>{a}</Text>
+                    {activity === a && <Feather name="check" size={14} color="#ffffff" />}
                   </TouchableOpacity>
                 ))}
               </View>
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
     height: 3, backgroundColor: 'rgba(255,255,255,0.1)',
     marginHorizontal: 20, borderRadius: 2,
   },
-  progressFill: { height: '100%', backgroundColor: '#4ECDC4', borderRadius: 2 },
+  progressFill: { height: '100%', backgroundColor: '#ffffff', borderRadius: 2 },
   progressLabel: {
     color: 'rgba(255,255,255,0.3)', fontFamily: F.body, fontSize: 11,
     marginLeft: 20, marginTop: 6, marginBottom: 4,
@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
     borderWidth: 2, borderColor: 'rgba(255,255,255,0.15)', borderStyle: 'dashed',
     borderRadius: 20, paddingVertical: 48, alignItems: 'center', gap: 12,
   },
-  videoPickerSelected: { borderColor: '#4ECDC4', borderStyle: 'solid' },
+  videoPickerSelected: { borderColor: '#ffffff', borderStyle: 'solid' },
   videoPickerText: { fontFamily: F.bodySemiBold, fontSize: 15, color: 'rgba(255,255,255,0.55)' },
   videoPickerHint: { fontFamily: F.body, fontSize: 12, color: 'rgba(255,255,255,0.25)' },
   aiNotice: {
@@ -380,7 +380,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
   },
   previewLabel: { color: 'rgba(255,255,255,0.3)', fontFamily: F.body, fontSize: 11, marginBottom: 8 },
-  previewCategory: { color: '#4ECDC4', fontFamily: F.bodySemiBold, fontSize: 11, letterSpacing: 0.5, marginBottom: 4 },
+  previewCategory: { color: '#ffffff', fontFamily: F.bodySemiBold, fontSize: 11, letterSpacing: 0.5, marginBottom: 4 },
   previewPlace: { fontFamily: F.display, fontSize: 20, color: C.white },
   previewCity: { color: 'rgba(255,255,255,0.4)', fontFamily: F.body, fontSize: 12, marginTop: 3 },
   footer: {
@@ -389,11 +389,11 @@ const styles = StyleSheet.create({
   },
   primaryBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    backgroundColor: '#4ECDC4', borderRadius: 30, paddingVertical: 16,
+    backgroundColor: '#ffffff', borderRadius: 30, paddingVertical: 16,
   },
   uploadBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    backgroundColor: '#4ECDC4', borderRadius: 30, paddingVertical: 16,
+    backgroundColor: '#ffffff', borderRadius: 30, paddingVertical: 16,
   },
   primaryBtnText: { fontFamily: F.bodySemiBold, fontSize: 15, color: '#111' },
   secondaryBtn: {
