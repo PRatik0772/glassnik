@@ -120,7 +120,7 @@ export default function UploadScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
+        <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)' as any)} style={styles.backBtn} activeOpacity={0.7}>
           <Feather name="x" size={22} color={C.white} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Upload Eye-POV</Text>
@@ -368,8 +368,8 @@ const styles = StyleSheet.create({
   videoPickerHint: { fontFamily: F.body, fontSize: 12, color: 'rgba(255,255,255,0.25)' },
   aiNotice: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 10,
-    backgroundColor: 'rgba(78,205,196,0.1)', borderRadius: 12,
-    padding: 14, marginTop: 20, borderWidth: 1, borderColor: 'rgba(78,205,196,0.25)',
+    backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 12,
+    padding: 14, marginTop: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
   },
   aiNoticeText: { flex: 1, color: 'rgba(255,255,255,0.6)', fontFamily: F.body, fontSize: 13, lineHeight: 19 },
   fieldLabel: {
@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingVertical: 13,
     borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)',
   },
-  pickerItemActive: { backgroundColor: 'rgba(78,205,196,0.08)' },
+  pickerItemActive: { backgroundColor: 'rgba(255,255,255,0.08)' },
   pickerItemText: { fontFamily: F.body, fontSize: 15, color: C.white },
   input: {
     backgroundColor: 'rgba(255,255,255,0.07)',
