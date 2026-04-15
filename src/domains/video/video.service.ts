@@ -95,6 +95,32 @@ export class VideoService {
     await this.prisma.videoAsset.delete({ where: { id } });
   }
 
+  // GET /videos/nearby — haversine distance filter in-DB via raw query
+  async getNearby(lat: number, lng: number, radiusKm: number, limit: number) {
+    if (isNaN(lat) || isNaN(lng)) return [];
+
+    // Use a bounding box pre-filter then sort by distance
+    const latDelta = radiusKm / 111.0;
+    const lngDelta = radiusKm / (111.0 * Math.cos((lat * Math.PI) / 180));
+
+    return this.prisma.videoAsset.findMany({
+      where: {
+        moderationStatus: 'APPROVED',
+        status: 'READY',
+        latitude: { gte: lat - latDelta, lte: lat + latDelta },
+        longitude: { gte: lng - lngDelta, lte: lng + lngDelta },
+      },
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true, muxPlaybackId: true, thumbnailUrl: true,
+        place: true, city: true, country: true, category: true, viewCount: true,
+        latitude: true, longitude: true,
+        owner: { select: { id: true, username: true, displayName: true, avatarUrl: true } },
+      },
+    });
+  }
+
   // Step 1: create the video record + return a signed GCS upload URL
   async requestUpload(ownerId: number, dto: UploadVideoDto) {
     const gcsPath = `uploads/${ownerId}/${Date.now()}.${dto.mimeType.split('/')[1]}`;

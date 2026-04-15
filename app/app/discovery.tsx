@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, FlatList,
-  TextInput, ScrollView, Dimensions, SafeAreaView, Platform,
+  TextInput, ScrollView, Dimensions, Platform, ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
+import * as Location from 'expo-location';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { Image } from 'expo-image';
@@ -142,19 +143,72 @@ function TrendingTab() {
 }
 
 function NearbyTab() {
+  const [locStatus, setLocStatus] = useState<'idle' | 'loading' | 'granted' | 'denied'>('idle');
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [videos, setVideos] = useState(MOCK_VIDEOS);
+
+  const requestLocation = async () => {
+    setLocStatus('loading');
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') { setLocStatus('denied'); return; }
+      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      const { latitude: lat, longitude: lng } = loc.coords;
+      setCoords({ lat, lng });
+      setLocStatus('granted');
+      // Fetch nearby from backend; falls back to mock on error
+      const { getNearbyFeed } = await import('../src/api/feed');
+      const data = await getNearbyFeed({ lat, lng, radius: 50 });
+      if (data.length > 0) setVideos(data as any);
+    } catch {
+      setLocStatus('denied');
+    }
+  };
+
+  useEffect(() => { requestLocation(); }, []);
+
+  if (locStatus === 'loading') {
+    return (
+      <View style={styles.nearbyPermission}>
+        <ActivityIndicator color="#4ECDC4" />
+        <Text style={styles.nearbyPermissionText}>Getting your location…</Text>
+      </View>
+    );
+  }
+
+  if (locStatus === 'denied') {
+    return (
+      <View style={styles.nearbyPermission}>
+        <Feather name="map-pin" size={36} color="rgba(255,255,255,0.2)" />
+        <Text style={styles.nearbyPermissionTitle}>Location access needed</Text>
+        <Text style={styles.nearbyPermissionText}>
+          Enable location in Settings to discover Eye-POV experiences near you
+        </Text>
+        <TouchableOpacity style={styles.nearbyRetryBtn} onPress={requestLocation} activeOpacity={0.8}>
+          <Text style={styles.nearbyRetryText}>Try again</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <ScrollView contentContainerStyle={{ padding: 20 }}>
       {/* Location header */}
       <View style={styles.nearbyHeader}>
         <Feather name="map-pin" size={16} color="#4ECDC4" />
-        <Text style={styles.nearbyLocation}>Your Location</Text>
-        <TouchableOpacity style={styles.nearbyToggle} activeOpacity={0.8}>
-          <Text style={styles.nearbyActive}>Nearby</Text>
-          <Text style={styles.nearbyInactive}>Global</Text>
+        <Text style={styles.nearbyLocation}>
+          {coords ? `${coords.lat.toFixed(2)}°, ${coords.lng.toFixed(2)}°` : 'Your Location'}
+        </Text>
+        <TouchableOpacity
+          style={styles.nearbyRefreshBtn}
+          onPress={requestLocation}
+          activeOpacity={0.8}
+        >
+          <Feather name="refresh-cw" size={13} color="#4ECDC4" />
         </TouchableOpacity>
       </View>
 
-      {MOCK_VIDEOS.map((item) => (
+      {videos.map((item) => (
         <TouchableOpacity
           key={item.id}
           style={styles.nearbyCard}
@@ -448,11 +502,24 @@ const styles = StyleSheet.create({
   trendViews: { color: 'rgba(255,255,255,0.4)', fontSize: 10, fontFamily: F.body },
 
   // Nearby
+  nearbyPermission: {
+    flex: 1, alignItems: 'center', justifyContent: 'center',
+    gap: 14, padding: 32,
+  },
+  nearbyPermissionTitle: { fontFamily: F.display, fontSize: 20, color: C.white, textAlign: 'center' },
+  nearbyPermissionText: { fontFamily: F.body, fontSize: 14, color: 'rgba(255,255,255,0.45)', textAlign: 'center', lineHeight: 21 },
+  nearbyRetryBtn: {
+    marginTop: 8, paddingHorizontal: 28, paddingVertical: 12,
+    backgroundColor: '#4ECDC4', borderRadius: 24,
+  },
+  nearbyRetryText: { fontFamily: F.bodySemiBold, fontSize: 13, color: '#111' },
   nearbyHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
-  nearbyLocation: { flex: 1, color: C.white, fontFamily: F.bodySemiBold, fontSize: 14 },
-  nearbyToggle: { flexDirection: 'row', gap: 8 },
-  nearbyActive: { color: '#4ECDC4', fontFamily: F.bodySemiBold, fontSize: 13 },
-  nearbyInactive: { color: 'rgba(255,255,255,0.35)', fontFamily: F.body, fontSize: 13 },
+  nearbyLocation: { flex: 1, color: C.white, fontFamily: F.bodySemiBold, fontSize: 13 },
+  nearbyRefreshBtn: {
+    width: 30, height: 30, borderRadius: 15,
+    backgroundColor: 'rgba(78,205,196,0.12)',
+    alignItems: 'center', justifyContent: 'center',
+  },
   nearbyCard: { marginBottom: 16, borderRadius: 12, overflow: 'hidden', backgroundColor: '#1a1a1a' },
   nearbyThumb: { width: '100%', height: 180 },
   nearbyOverlay: { position: 'absolute', top: 8, right: 8, flexDirection: 'row', alignItems: 'center', gap: 4 },

@@ -130,6 +130,8 @@ model VideoAsset {
   country             String?            @db.VarChar(100)
   category            String?            @db.VarChar(100)
   thumbnailUrl        String?            @map("thumbnail_url")
+  latitude            Float?
+  longitude           Float?
   viewCount           Int                @default(0) @map("view_count")
   status              String?            @db.VarChar(50)
   moderationStatus    ModerationStatus   @default(PENDING) @map("moderation_status")

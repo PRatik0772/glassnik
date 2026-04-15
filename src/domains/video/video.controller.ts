@@ -9,6 +9,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -19,39 +20,58 @@ import { UploadVideoDto } from './dto/upload-video.dto';
 import { JwtAuthGuard } from '@/auth/guards/jwt-auth.guard';
 
 @Controller('videos')
-@UseGuards(JwtAuthGuard)
 export class VideoController {
   constructor(private readonly videoService: VideoService) {}
 
+  // GET /videos/nearby — public, no JWT needed
+  @Get('nearby')
+  getNearby(
+    @Query('lat') lat: string,
+    @Query('lng') lng: string,
+    @Query('radius') radius = '50',
+    @Query('limit') limit = '20',
+  ) {
+    return this.videoService.getNearby(
+      parseFloat(lat),
+      parseFloat(lng),
+      parseFloat(radius),
+      parseInt(limit, 10),
+    );
+  }
+
+  // All routes below require JWT
   @Post()
+  @UseGuards(JwtAuthGuard)
   create(@Req() req, @Body() dto: CreateVideoDto) {
     return this.videoService.create(req.user.id, dto);
   }
 
-  // POST /videos/upload — returns a signed GCS URL + video record id
   @Post('upload')
+  @UseGuards(JwtAuthGuard)
   requestUpload(@Req() req, @Body() dto: UploadVideoDto) {
     return this.videoService.requestUpload(req.user.id, dto);
   }
 
-  // PATCH /videos/:id/confirm — owner calls this after upload completes
-  @Patch(':id/confirm')
-  confirmUpload(@Param('id', ParseIntPipe) id: number, @Req() req) {
-    return this.videoService.confirmUpload(id, req.user.id);
-  }
-
   @Get()
+  @UseGuards(JwtAuthGuard)
   findAll(@Req() req) {
     return this.videoService.findAllByOwner(req.user.id);
   }
 
-  // Ownership enforced: only owner can fetch their own video details
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
   findOne(@Param('id', ParseIntPipe) id: number, @Req() req) {
     return this.videoService.findOne(id, req.user.id);
   }
 
+  @Patch(':id/confirm')
+  @UseGuards(JwtAuthGuard)
+  confirmUpload(@Param('id', ParseIntPipe) id: number, @Req() req) {
+    return this.videoService.confirmUpload(id, req.user.id);
+  }
+
   @Patch(':id')
+  @UseGuards(JwtAuthGuard)
   update(
     @Param('id', ParseIntPipe) id: number,
     @Req() req,
@@ -62,6 +82,7 @@ export class VideoController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(JwtAuthGuard)
   remove(@Param('id', ParseIntPipe) id: number, @Req() req) {
     return this.videoService.remove(id, req.user.id);
   }
