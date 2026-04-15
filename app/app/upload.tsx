@@ -6,6 +6,7 @@ import {
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { apiClient } from '../src/api/client';
 import { C, F } from '../src/constants/theme';
 
@@ -21,7 +22,9 @@ const ACTIVITIES = [
 export default function UploadScreen() {
   const insets = useSafeAreaInsets();
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [videoSelected, setVideoSelected] = useState(false);
+  const [videoUri, setVideoUri] = useState<string | null>(null);
+  const [videoMime, setVideoMime] = useState('video/mp4');
+  const [videoSize, setVideoSize] = useState(0);
   const [category, setCategory] = useState<string | null>(null);
   const [activity, setActivity] = useState<string | null>(null);
   const [place, setPlace] = useState('');
@@ -31,13 +34,27 @@ export default function UploadScreen() {
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [showActivityPicker, setShowActivityPicker] = useState(false);
 
-  const handleVideoSelect = () => {
-    // In production: use expo-image-picker
-    setVideoSelected(true);
+  const handleVideoSelect = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission needed', 'Please allow access to your media library to select a video.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+      allowsEditing: false,
+      quality: 1,
+    });
+    if (!result.canceled && result.assets.length > 0) {
+      const asset = result.assets[0];
+      setVideoUri(asset.uri);
+      setVideoMime(asset.mimeType ?? 'video/mp4');
+      setVideoSize(asset.fileSize ?? 50 * 1024 * 1024);
+    }
   };
 
   const handleUpload = async () => {
-    if (!videoSelected) return Alert.alert('No video', 'Please select a video first.');
+    if (!videoUri) return Alert.alert('No video', 'Please select a video first.');
     if (!category) return Alert.alert('Missing category', 'Please select a category.');
     if (!place) return Alert.alert('Missing place', 'Please enter the place name.');
     if (!city) return Alert.alert('Missing city', 'Please enter the city.');
@@ -47,13 +64,24 @@ export default function UploadScreen() {
     try {
       // Step 1: Create video record + get signed upload URL
       const { data: uploadData } = await apiClient.post('/videos/upload', {
-        mimeType: 'video/mp4',
-        sizeBytes: 50 * 1024 * 1024, // placeholder — replace with real file size
+        mimeType: videoMime,
+        sizeBytes: videoSize,
         title: place,
         description: `${category}${activity ? ' · ' + activity : ''} in ${city}, ${country}`,
       });
 
-      const { videoId } = uploadData;
+      const { videoId, uploadUrl } = uploadData;
+
+      // Step 1b: PUT the actual file to GCS signed URL
+      if (uploadUrl) {
+        const fileResponse = await fetch(videoUri);
+        const blob = await fileResponse.blob();
+        await fetch(uploadUrl, {
+          method: 'PUT',
+          headers: { 'Content-Type': videoMime },
+          body: blob,
+        });
+      }
 
       // Step 2: Update video metadata (category, place, location)
       await apiClient.patch(`/videos/${videoId}`, {
@@ -116,24 +144,24 @@ export default function UploadScreen() {
             </Text>
 
             <TouchableOpacity
-              style={[styles.videoPicker, videoSelected && styles.videoPickerSelected]}
+              style={[styles.videoPicker, !!videoUri && styles.videoPickerSelected]}
               onPress={handleVideoSelect}
               activeOpacity={0.8}
             >
               <Feather
-                name={videoSelected ? 'check-circle' : 'video'}
+                name={!!videoUri ? 'check-circle' : 'video'}
                 size={40}
-                color={videoSelected ? '#ffffff' : 'rgba(255,255,255,0.3)'}
+                color={!!videoUri ? '#ffffff' : 'rgba(255,255,255,0.3)'}
               />
-              <Text style={[styles.videoPickerText, videoSelected && { color: '#ffffff' }]}>
-                {videoSelected ? 'Video selected — tap to change' : 'Tap to select video'}
+              <Text style={[styles.videoPickerText, !!videoUri && { color: '#ffffff' }]}>
+                {!!videoUri ? 'Video selected — tap to change' : 'Tap to select video'}
               </Text>
-              {!videoSelected && (
+              {!!!videoUri && (
                 <Text style={styles.videoPickerHint}>MP4, MOV · Max 3 minutes</Text>
               )}
             </TouchableOpacity>
 
-            {videoSelected && (
+            {!!videoUri && (
               <View style={styles.aiNotice}>
                 <Feather name="cpu" size={16} color="#ffffff" />
                 <Text style={styles.aiNoticeText}>
@@ -272,7 +300,7 @@ export default function UploadScreen() {
           <TouchableOpacity
             style={[styles.primaryBtn, { flex: step > 1 ? 1 : undefined }]}
             onPress={() => {
-              if (step === 1 && !videoSelected) {
+              if (step === 1 && !!!videoUri) {
                 return Alert.alert('No video', 'Please select a video first.');
               }
               setStep((s) => (s + 1) as any);
